@@ -35,6 +35,7 @@ export default function TeamRequests({ team, busy, quiet, onAction }: Props) {
   const completed = requests.filter((q) => q.status !== "pending").slice(-2);
   const name = (id: string) =>
     team.members.find((m) => m.id === id)?.name || "Teammate";
+  if (!active) return null;
   return (
     <>
       {(pending.length > 0 || a?.pauseRequested || completed.length > 0) && (

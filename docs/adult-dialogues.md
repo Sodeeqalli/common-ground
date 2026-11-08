@@ -1,6 +1,6 @@
 # Common Ground — Eight Adult Conversations
 
-Optional individual Practice only. These original fictional conversations do not award mission energy, affect team progress or rate a player’s communication. Internal criterion credits below are authoring metadata, not player scores. See [team-spec.md](team-spec.md) for the current mission design and research boundaries.
+Archived design material. Practice is not present in the shipped game. These original fictional conversations do not award mission energy, affect team progress or rate a player’s communication. Internal criterion credits below are authoring metadata, not player scores; historical rationale codes are not evidence for the individual scripted answers. See [team-spec.md](team-spec.md) for the current mission design and research boundaries.
 
 <a id="ae-01"></a>
 

@@ -105,8 +105,21 @@ const stale = await request(
   tokens[1],
   body(snap, "claim", { objective: "controller" }),
 );
-assert.equal(stale.status, 409);
-await action(1, "claim", { objective: "controller" });
+assert.equal(stale.status, 200, "Independent job claims can rebase safely");
+await together("release");
+const competingSnapshot = await read();
+const competingClaims = await Promise.all(
+  tokens.map((token) =>
+    request(token, body(competingSnapshot, "claim", { objective: "pump" })),
+  ),
+);
+assert.deepEqual(competingClaims.map((r) => r.status).sort(), [200, 400]);
+assert.equal(
+  (await read()).attempt.objectives.filter((o) => o.owner).length,
+  1,
+);
+await together("release");
+await together("claim", [{ objective: "pump" }, { objective: "controller" }]);
 await together("brief-ready");
 assert.equal((await read()).attempt.phase, "coordination");
 assert.equal((await read()).scenario, undefined);
@@ -117,7 +130,16 @@ assert.equal((await read()).energyRequests.length, 1);
 await action(1, "signal", { kind: "collect" });
 assert.equal((await read(1)).energyRequests[0].status, "pending");
 const oldReady = await read();
-await action(1, "give", { to: ids[0], request: requestId });
+await action(1, "signal-clear");
+const rebasedGive = await request(
+  tokens[1],
+  body(oldReady, "give", { to: ids[0], request: requestId }),
+);
+assert.equal(
+  rebasedGive.status,
+  200,
+  "A signal update must not block energy support",
+);
 const changedReady = await request(tokens[0], body(oldReady, "coord-ready"));
 assert.equal(changedReady.status, 409);
 assert.equal((await read()).energyRequests[0].status, "fulfilled");
@@ -304,8 +326,14 @@ assert.equal(
   400,
 );
 assert.equal(
-  (await ownerAction("set-discovery", { enabled: false })).status,
+  (
+    await request(
+      ownerToken,
+      body(privateTeam.data.team, "set-discovery", { enabled: false }),
+    )
+  ).status,
   200,
+  "A member joining must not block the creator from hiding their team",
 );
 assert.deepEqual(await directory(), []);
 assert.equal(

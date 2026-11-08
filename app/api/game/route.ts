@@ -163,6 +163,8 @@ export async function POST(req: Request) {
     // Revalidate phase-local coordination after competing writes.
     // Readiness still requires the same assignments, energy and positions.
     const phaseLocal = [
+      "claim",
+      "release",
       "brief-ready",
       "coord-ready",
       "moves",
@@ -173,12 +175,13 @@ export async function POST(req: Request) {
       "signal-ack",
       "signal-reply",
       "signal-clear",
-      "message",
       "ping",
       "energy-request",
+      "give",
       "request-response",
     ].includes(body.type);
-    const attempts = phaseLocal ? 5 : 1;
+    const teamLocal = ["message", "set-discovery"].includes(body.type);
+    const attempts = phaseLocal || teamLocal ? 5 : 1;
     for (let retry = 0; retry < attempts; retry++) {
       const team = await getTeam(member.team_id);
       if (!team) return reply({ error: "Team not found." }, 404);
@@ -190,7 +193,7 @@ export async function POST(req: Request) {
         !["brief-ready", "coord-ready"].includes(body.type) ||
         (a && body.readyContext === readinessContext(a));
       const mayRebase =
-        body.type === "message" || (phaseLocal && samePhase && readyIsCurrent);
+        teamLocal || (phaseLocal && samePhase && readyIsCurrent);
       if (body.version !== team.version && !mayRebase)
         return reply(
           {

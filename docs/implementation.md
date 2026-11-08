@@ -1,6 +1,6 @@
 # Current implementation — shared strategy update
 
-The current rules are [team-spec.md](team-spec.md), version 7. Missions no longer contain an answer/pass phase. Practice and Race have been removed from navigation; the Practice UI and endpoint are removed. Authored scenarios remain archived.
+The current rules are [team-spec.md](team-spec.md), version 8. Missions no longer contain an answer/pass phase. Practice and Race have been removed from navigation; the Practice UI and endpoint are removed. Authored scenarios remain archived. The [final pitch](final-pitch.md) maps the working design to the research register and compares it with existing games and applications.
 
 ## Working features
 
@@ -55,3 +55,9 @@ Team joins stop at six members. Mission launch validates exactly two distinct ex
 `Attempt.missionId` selects the map definition; missing values mean Greenhouse. Mission definitions provide floor, base, batteries, objectives, round limit and linked plates/gates. Preview, server resolution, pings and presentation share that definition. A and B open independently, with plate changes resolved before gate entries. Power success restores `power`, preserving greenhouse progress and separate contributor credits. No D1 schema migration is required.
 
 Additional checks exercise creator-only discovery, private defaults, directory field boundaries, code-free joins, stale hidden/full listings, map access without bypasses, both same-step gates, legacy mission IDs, twelve-round failure and a complete eleven-round Power victory through both rules and HTTP persistence.
+
+## Final release pass — 8 November 2026
+
+Browser testing exposed avoidable version conflicts when players claimed different tasks together, shared energy alongside a signal, or changed team visibility while a teammate updated the mission. These operations now revalidate against current server state and retry versioned writes. Same-task claims still have only one winner, transfers retain their resource/once-per-round checks, creator-only visibility remains enforced, and readiness still rejects a changed plan. Regression cases are in `tests/api-smoke.mjs`.
+
+Completed and pending request cards are hidden after an attempt ends, so an obsolete energy request does not clutter the shared world. Active requests remain persistent. See [release-check.md](release-check.md) for the verification record and demo limitations.
