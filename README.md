@@ -26,6 +26,7 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 - [Scenario data](content/adult-scenarios.json)
 - [Current implementation and limits](docs/implementation.md)
 - [Final release checks](docs/release-check.md)
+- [Live multiplayer mission check](docs/live-multiplayer-check.md)
 - [System architecture and Cloudflare deployment](docs/system-architecture.md)
 - [AI assistance disclosure](docs/AI-USE.md)
 
