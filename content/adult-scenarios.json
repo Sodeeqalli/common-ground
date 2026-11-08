@@ -1,0 +1,1303 @@
+{
+  "schemaVersion": 1,
+  "title": "Common Ground — Eight Adult Scenarios",
+  "platform": "Browser game",
+  "language": "en-CA",
+  "authoredDate": "2026-11-07",
+  "sources": [
+    {
+      "id": "R2",
+      "title": "Gamified interventions review (2025)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40043470/",
+      "scope": "20 studies; mostly children/adolescents. Broad rationale, not validation of individual scenarios or age-independent efficacy."
+    },
+    {
+      "id": "R3",
+      "title": "Adult simulated interview practice trial (2014)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/24803366/",
+      "scope": "26 adults; simulated interviews plus instruction. A different task and training package from this game."
+    }
+  ],
+  "scoring": {
+    "completionEnergy": 1,
+    "creditPerDecision": 1,
+    "scoredDecisions": 2,
+    "repairCredit": 0,
+    "passEnergy": 1,
+    "passDiscardsPartialBonuses": true,
+    "maxRoundEnergy": 3
+  },
+  "playlists": {
+    "AE": [
+      [
+        "AE-01",
+        "AE-03",
+        "AE-05",
+        "AE-07",
+        "AE-02",
+        "AE-04",
+        "AE-06",
+        "AE-08"
+      ]
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "AE-01",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "What does soon mean?",
+      "skill": "Clarifying expectations and capacity",
+      "pairId": "AE-PAIR-01",
+      "context": "You are working on a group presentation. Your slides can be finished by 6 p.m., but not earlier. You do not yet know when the group needs them.",
+      "goal": "Establish a clear deadline and communicate what you can realistically provide.",
+      "openingLine": "Maya: “Can you finish your slides soon?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-01-D1",
+      "nodes": {
+        "AE-01-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“There are two stages to what I need.”",
+          "next": "AE-01-REVEAL"
+        },
+        "AE-01-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“I need something earlier for the layout.”",
+          "next": "AE-01-REVEAL"
+        },
+        "AE-01-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Okay, I will expect the slides at four.”",
+          "next": "AE-01-R1"
+        },
+        "AE-01-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-01-D1-C3",
+              "text": "Sure, I will have everything ready whenever you need it.",
+              "credit": 0,
+              "explanation": "That promises unspecified availability despite your known time constraint.",
+              "next": "AE-01-D1-REPLY3"
+            },
+            {
+              "id": "AE-01-D1-C1",
+              "text": "What time do you need them? I can finish by six.",
+              "credit": 1,
+              "explanation": "You ask for a deadline and state a feasible completion time.",
+              "next": "AE-01-D1-REPLY1"
+            },
+            {
+              "id": "AE-01-D1-C2",
+              "text": "I can finish by six. Does that work for combining the presentation?",
+              "credit": 1,
+              "explanation": "You check whether your available time meets the practical need.",
+              "next": "AE-01-D1-REPLY2"
+            }
+          ]
+        },
+        "AE-01-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-01-R1-C1",
+              "text": "I should clarify: I can finish by six. Do you need something earlier?",
+              "credit": 0,
+              "next": "AE-01-R1-REPLY"
+            }
+          ]
+        },
+        "AE-01-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Let me explain the two deadlines.”",
+          "next": "AE-01-REVEAL"
+        },
+        "AE-01-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Yes, the outline is enough to start the layout.”",
+          "next": "AE-01-END"
+        },
+        "AE-01-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Yes, send the outline and I will start.”",
+          "next": "AE-01-END"
+        },
+        "AE-01-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Great, I will plan around that.”",
+          "next": "AE-01-R2"
+        },
+        "AE-01-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-01-D2-C1",
+              "text": "I can send an outline by four and finished slides by six. Would that work?",
+              "credit": 1,
+              "explanation": "You propose a feasible alternative and check whether it meets the need.",
+              "next": "AE-01-D2-REPLY1"
+            },
+            {
+              "id": "AE-01-D2-C2",
+              "text": "I cannot provide a full draft by four. Could you start the layout from my outline?",
+              "credit": 1,
+              "explanation": "You state the limit and negotiate how to divide the work.",
+              "next": "AE-01-D2-REPLY2"
+            },
+            {
+              "id": "AE-01-D2-C3",
+              "text": "I will send the full draft by four.",
+              "credit": 0,
+              "explanation": "The commitment conflicts with your actual ability to provide a full draft.",
+              "next": "AE-01-D2-REPLY3"
+            }
+          ]
+        },
+        "AE-01-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-01-R2-C1",
+              "text": "I need to revise that: an outline by four, finished slides by six. Does that work?",
+              "credit": 0,
+              "next": "AE-01-R2-REPLY"
+            }
+          ]
+        },
+        "AE-01-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Maya",
+          "text": "“Yes, I can work from the outline.”",
+          "next": "AE-01-END"
+        },
+        "AE-01-REVEAL": {
+          "type": "context",
+          "text": "Maya explains: “I need a rough version by four to combine everyone’s work. Final edits can wait until six.” You can send an outline by four, but not a full rough version.",
+          "next": "AE-01-D2"
+        },
+        "AE-01-END": {
+          "type": "terminal",
+          "text": "The useful result is a shared, feasible plan. A positive reaction from someone else does not make an unrealistic promise feasible.",
+          "phrase": "I can provide ___ by ___. Would that meet what you need?"
+        }
+      }
+    },
+    {
+      "id": "AE-02",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "Before the guests arrive",
+      "skill": "Clarifying a household deadline",
+      "pairId": "AE-PAIR-01",
+      "context": "Your housemate asks for help getting the shared room ready. You are available from 5:30 onward, but do not know the guest arrival time or which task is yours.",
+      "goal": "Clarify the task and timing before agreeing to complete it.",
+      "openingLine": "Nadia: “Can you sort out the room before the guests arrive?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-02-D1",
+      "nodes": {
+        "AE-02-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“I will explain the tasks and the arrival time.”",
+          "next": "AE-02-REVEAL"
+        },
+        "AE-02-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“There are two things to finish before six.”",
+          "next": "AE-02-REVEAL"
+        },
+        "AE-02-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“Okay, I will leave it to you.”",
+          "next": "AE-02-R1"
+        },
+        "AE-02-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-02-D1-C1",
+              "text": "What needs doing, and when are the guests arriving? I am free from 5:30.",
+              "credit": 1,
+              "explanation": "You ask about scope and deadline while stating availability.",
+              "next": "AE-02-D1-REPLY1"
+            },
+            {
+              "id": "AE-02-D1-C2",
+              "text": "I can help after 5:30. Which part should I take, and will that be in time?",
+              "credit": 1,
+              "explanation": "You check whether a bounded offer meets the request.",
+              "next": "AE-02-D1-REPLY2"
+            },
+            {
+              "id": "AE-02-D1-C3",
+              "text": "I will have the whole room ready by five.",
+              "credit": 0,
+              "explanation": "That promises completion before you are available.",
+              "next": "AE-02-D1-REPLY3"
+            }
+          ]
+        },
+        "AE-02-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-02-R1-C1",
+              "text": "I am not available until 5:30. What needs doing after that?",
+              "credit": 0,
+              "next": "AE-02-R1-REPLY"
+            }
+          ]
+        },
+        "AE-02-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“Let me describe the two tasks.”",
+          "next": "AE-02-REVEAL"
+        },
+        "AE-02-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“Yes, I will do the table.”",
+          "next": "AE-02-END"
+        },
+        "AE-02-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“Yes, I can sort the papers while you do the chairs.”",
+          "next": "AE-02-END"
+        },
+        "AE-02-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“Some of those papers need to be kept.”",
+          "next": "AE-02-R2"
+        },
+        "AE-02-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-02-D2-C2",
+              "text": "I will arrange the chairs first. Could you show me which papers to keep before we tackle the table?",
+              "credit": 1,
+              "explanation": "You sequence a feasible task and request the information needed for the other.",
+              "next": "AE-02-D2-REPLY2"
+            },
+            {
+              "id": "AE-02-D2-C3",
+              "text": "I will put all the papers in the recycling to clear the table.",
+              "credit": 0,
+              "explanation": "That bypasses an explicit uncertainty about shared belongings.",
+              "next": "AE-02-D2-REPLY3"
+            },
+            {
+              "id": "AE-02-D2-C1",
+              "text": "I can arrange the chairs. Can you handle the papers and clear the table?",
+              "credit": 1,
+              "explanation": "You propose a division that uses each person’s available information.",
+              "next": "AE-02-D2-REPLY1"
+            }
+          ]
+        },
+        "AE-02-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-02-R2-C1",
+              "text": "I need you to identify the papers to keep. I will start with the chairs.",
+              "credit": 0,
+              "next": "AE-02-R2-REPLY"
+            }
+          ]
+        },
+        "AE-02-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Nadia",
+          "text": "“I will sort the papers now.”",
+          "next": "AE-02-END"
+        },
+        "AE-02-REVEAL": {
+          "type": "context",
+          "text": "Nadia explains: “Guests arrive at six. We need the table cleared and chairs arranged.” You can arrange the chairs in the available time. Clearing the table requires Nadia to identify which papers to keep.",
+          "next": "AE-02-D2"
+        },
+        "AE-02-END": {
+          "type": "terminal",
+          "text": "A household request can hide both a deadline and a decision only another person can make. Clarifying those allows a practical division of work.",
+          "phrase": "Which part should I handle, and what do I need to know first?"
+        }
+      }
+    },
+    {
+      "id": "AE-03",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "Interested, with a condition",
+      "skill": "Expressing an environmental preference",
+      "pairId": "AE-PAIR-02",
+      "context": "You would like to meet a friend. The proposed café is usually crowded, and today you want a setting where you can have a quiet conversation.",
+      "goal": "Express interest while checking whether a quieter meeting arrangement is possible.",
+      "openingLine": "Sam: “Want to meet at the café on Saturday afternoon?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-03-D1",
+      "nodes": {
+        "AE-03-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Let me suggest an alternative.”",
+          "next": "AE-03-REVEAL"
+        },
+        "AE-03-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“I checked the café’s options.”",
+          "next": "AE-03-REVEAL"
+        },
+        "AE-03-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Okay, I will plan for that café.”",
+          "next": "AE-03-R1"
+        },
+        "AE-03-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-03-D1-C2",
+              "text": "A quiet conversation would work better for me. Is there a quieter time or place?",
+              "credit": 1,
+              "explanation": "You state the relevant preference and invite a workable alternative.",
+              "next": "AE-03-D1-REPLY2"
+            },
+            {
+              "id": "AE-03-D1-C3",
+              "text": "The crowded café is exactly the quiet setting I need.",
+              "credit": 0,
+              "explanation": "That gives information inconsistent with the stated setting and preference.",
+              "next": "AE-03-D1-REPLY3"
+            },
+            {
+              "id": "AE-03-D1-C1",
+              "text": "I would like to meet. Could we choose somewhere quieter than that café?",
+              "credit": 1,
+              "explanation": "You distinguish wanting to meet from being comfortable with the setting.",
+              "next": "AE-03-D1-REPLY1"
+            }
+          ]
+        },
+        "AE-03-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-03-R1-C1",
+              "text": "I would like to see you, but I need a quieter setting than that café.",
+              "credit": 0,
+              "next": "AE-03-R1-REPLY"
+            }
+          ]
+        },
+        "AE-03-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Here is another possibility.”",
+          "next": "AE-03-REVEAL"
+        },
+        "AE-03-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Yes, we can confirm Saturday morning.”",
+          "next": "AE-03-END"
+        },
+        "AE-03-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Yes, that backup plan works for me.”",
+          "next": "AE-03-END"
+        },
+        "AE-03-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“I have not seen a definite forecast.”",
+          "next": "AE-03-R2"
+        },
+        "AE-03-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-03-D2-C3",
+              "text": "The weather is definitely dry, so no check or backup is needed.",
+              "credit": 0,
+              "explanation": "That turns an unknown condition into a certainty.",
+              "next": "AE-03-D2-REPLY3"
+            },
+            {
+              "id": "AE-03-D2-C1",
+              "text": "The park sounds good if it is dry. Shall we check the weather that morning and confirm?",
+              "credit": 1,
+              "explanation": "You make the condition and confirmation step explicit.",
+              "next": "AE-03-D2-REPLY1"
+            },
+            {
+              "id": "AE-03-D2-C2",
+              "text": "Could we plan for the park in dry weather and reschedule if it rains?",
+              "credit": 1,
+              "explanation": "You agree on both the preferred option and what happens if its condition fails.",
+              "next": "AE-03-D2-REPLY2"
+            }
+          ]
+        },
+        "AE-03-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-03-R2-C1",
+              "text": "The weather is still uncertain. Let us confirm that morning and reschedule if needed.",
+              "credit": 0,
+              "next": "AE-03-R2-REPLY"
+            }
+          ]
+        },
+        "AE-03-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Sam",
+          "text": "“Agreed.”",
+          "next": "AE-03-END"
+        },
+        "AE-03-REVEAL": {
+          "type": "context",
+          "text": "Sam says: “That café does not take quiet-table requests. I could meet in the park instead, if the weather is dry.” You would enjoy the park, but the forecast is not yet clear.",
+          "next": "AE-03-D2"
+        },
+        "AE-03-END": {
+          "type": "terminal",
+          "text": "A conditional plan can still be a clear plan. Name the condition and decide how you will confirm or change it.",
+          "phrase": "That works for me if ___. What should we do if it changes?"
+        }
+      }
+    },
+    {
+      "id": "AE-04",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "Making a meeting usable",
+      "skill": "Requesting a communication format",
+      "pairId": "AE-PAIR-02",
+      "context": "You are in a project meeting. Several people are speaking quickly, and you cannot tell which action has been assigned to you. Written action points would help.",
+      "goal": "Get a clear record of your task and the information needed to complete it.",
+      "openingLine": "Jordan: “Everyone knows their next steps, so let us move on.”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-04-D1",
+      "nodes": {
+        "AE-04-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“Yes, I will add an action point.”",
+          "next": "AE-04-REVEAL"
+        },
+        "AE-04-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“I will write it in the shared notes.”",
+          "next": "AE-04-REVEAL"
+        },
+        "AE-04-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“Great, we can move on.”",
+          "next": "AE-04-R1"
+        },
+        "AE-04-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-04-D1-C3",
+              "text": "Yes, my task is completely clear.",
+              "credit": 0,
+              "explanation": "That confirms understanding when the task is still unclear to you.",
+              "next": "AE-04-D1-REPLY3"
+            },
+            {
+              "id": "AE-04-D1-C1",
+              "text": "I do not have my action clear yet. Could we write down the task and owner?",
+              "credit": 1,
+              "explanation": "You correct the assumption of shared understanding and request a useful format.",
+              "next": "AE-04-D1-REPLY1"
+            },
+            {
+              "id": "AE-04-D1-C2",
+              "text": "Before we move on, could you recap my action in the notes?",
+              "credit": 1,
+              "explanation": "You ask for a concrete clarification without needing to justify your communication preference.",
+              "next": "AE-04-D1-REPLY2"
+            }
+          ]
+        },
+        "AE-04-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-04-R1-C1",
+              "text": "My task is not clear yet. Please put my action in the notes.",
+              "credit": 0,
+              "next": "AE-04-R1-REPLY"
+            }
+          ]
+        },
+        "AE-04-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“I will write it out.”",
+          "next": "AE-04-REVEAL"
+        },
+        "AE-04-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“The Wednesday draft.”",
+          "next": "AE-04-END"
+        },
+        "AE-04-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“I have linked the Wednesday version.”",
+          "next": "AE-04-END"
+        },
+        "AE-04-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“We need the review on the current version.”",
+          "next": "AE-04-R2"
+        },
+        "AE-04-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-04-D2-C1",
+              "text": "Should I review the Monday draft or the Wednesday draft?",
+              "credit": 1,
+              "explanation": "You resolve the remaining version ambiguity.",
+              "next": "AE-04-D2-REPLY1"
+            },
+            {
+              "id": "AE-04-D2-C2",
+              "text": "Please link the exact draft you want reviewed in the action point.",
+              "credit": 1,
+              "explanation": "You ask for a concrete reference that prevents a version mix-up.",
+              "next": "AE-04-D2-REPLY2"
+            },
+            {
+              "id": "AE-04-D2-C3",
+              "text": "I will review the Monday draft; there is no need to check the version.",
+              "credit": 0,
+              "explanation": "That leaves the specified task attached to an unconfirmed document.",
+              "next": "AE-04-D2-REPLY3"
+            }
+          ]
+        },
+        "AE-04-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-04-R2-C1",
+              "text": "Please confirm the version before I start. Is it Wednesday’s draft?",
+              "credit": 0,
+              "next": "AE-04-R2-REPLY"
+            }
+          ]
+        },
+        "AE-04-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Jordan",
+          "text": "“Yes, Wednesday’s.”",
+          "next": "AE-04-END"
+        },
+        "AE-04-REVEAL": {
+          "type": "context",
+          "text": "Jordan writes: “Your action is to review the draft and flag factual errors.” The document contains two drafts labelled Monday and Wednesday; no version was specified.",
+          "next": "AE-04-D2"
+        },
+        "AE-04-END": {
+          "type": "terminal",
+          "text": "Asking for a usable communication format and checking the exact reference can turn an unclear meeting into an actionable task.",
+          "phrase": "Could you put the exact task and reference in writing?"
+        }
+      }
+    },
+    {
+      "id": "AE-05",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "No room for another task",
+      "skill": "Communicating capacity",
+      "pairId": "AE-PAIR-03",
+      "context": "A colleague asks for an extra report today. Your scheduled work fills the day. You could complete the new report tomorrow, or today if another task is explicitly reassigned.",
+      "goal": "State the capacity conflict and get a clear priority decision before promising delivery.",
+      "openingLine": "Casey: “Can you fit this report in today as well?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-05-D1",
+      "nodes": {
+        "AE-05-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“Tomorrow may be fine; let me confirm.”",
+          "next": "AE-05-REVEAL"
+        },
+        "AE-05-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“We may not need to change today’s priorities.”",
+          "next": "AE-05-REVEAL"
+        },
+        "AE-05-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“Okay, I will expect both.”",
+          "next": "AE-05-R1"
+        },
+        "AE-05-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-05-D1-C1",
+              "text": "I cannot add it today without moving another task. Is tomorrow acceptable?",
+              "credit": 1,
+              "explanation": "You state the trade-off and offer a feasible alternative.",
+              "next": "AE-05-D1-REPLY1"
+            },
+            {
+              "id": "AE-05-D1-C2",
+              "text": "Which task should move if this report is the priority? My day is already allocated.",
+              "credit": 1,
+              "explanation": "You ask for an explicit priority choice instead of silently overcommitting.",
+              "next": "AE-05-D1-REPLY2"
+            },
+            {
+              "id": "AE-05-D1-C3",
+              "text": "I will finish everything today with no changes.",
+              "credit": 0,
+              "explanation": "That promises more than the stated capacity allows.",
+              "next": "AE-05-D1-REPLY3"
+            }
+          ]
+        },
+        "AE-05-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-05-R1-C1",
+              "text": "I cannot complete both today. We need to move one task or change the deadline.",
+              "credit": 0,
+              "next": "AE-05-R1-REPLY"
+            }
+          ]
+        },
+        "AE-05-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“The report can wait; here is the plan.”",
+          "next": "AE-05-REVEAL"
+        },
+        "AE-05-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“That works.”",
+          "next": "AE-05-END"
+        },
+        "AE-05-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“Yes, I have updated it.”",
+          "next": "AE-05-END"
+        },
+        "AE-05-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“We agreed to keep today’s work as planned.”",
+          "next": "AE-05-R2"
+        },
+        "AE-05-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-05-D2-C2",
+              "text": "Tomorrow by noon is feasible for the report. Can we record that as the deadline?",
+              "credit": 1,
+              "explanation": "You make the new commitment explicit and shared.",
+              "next": "AE-05-D2-REPLY2"
+            },
+            {
+              "id": "AE-05-D2-C3",
+              "text": "I will drop today’s work and do the report immediately.",
+              "credit": 0,
+              "explanation": "That ignores the clarified priority decision.",
+              "next": "AE-05-D2-REPLY3"
+            },
+            {
+              "id": "AE-05-D2-C1",
+              "text": "I will keep today’s tasks and send the report tomorrow by noon.",
+              "credit": 1,
+              "explanation": "You confirm both the existing priority and a specific feasible deadline.",
+              "next": "AE-05-D2-REPLY1"
+            }
+          ]
+        },
+        "AE-05-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-05-R2-C1",
+              "text": "I will keep today’s work in place and deliver the report tomorrow by noon.",
+              "credit": 0,
+              "next": "AE-05-R2-REPLY"
+            }
+          ]
+        },
+        "AE-05-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Casey",
+          "text": "“Agreed.”",
+          "next": "AE-05-END"
+        },
+        "AE-05-REVEAL": {
+          "type": "context",
+          "text": "Casey says: “The report can wait until tomorrow. Please keep today’s work as planned.” You can finish the new report tomorrow by noon.",
+          "next": "AE-05-D2"
+        },
+        "AE-05-END": {
+          "type": "terminal",
+          "text": "Capacity is useful planning information. An explicit priority decision is more reliable than agreeing to incompatible deadlines.",
+          "phrase": "I can do that if another task moves. Which takes priority?"
+        }
+      }
+    },
+    {
+      "id": "AE-06",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "Ending a visit",
+      "skill": "Setting a personal boundary",
+      "pairId": "AE-PAIR-03",
+      "context": "A friend is visiting. You have enjoyed seeing them, but now want the visit to end so you can have time alone. You do not want to arrange another date right now.",
+      "goal": "Communicate that the visit is ending without making an unwanted new commitment.",
+      "openingLine": "Ellis: “Shall I stay for another film?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-06-D1",
+      "nodes": {
+        "AE-06-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Okay, I will get my things.”",
+          "next": "AE-06-REVEAL"
+        },
+        "AE-06-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“All right, I will head out.”",
+          "next": "AE-06-REVEAL"
+        },
+        "AE-06-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Great, let us choose one.”",
+          "next": "AE-06-R1"
+        },
+        "AE-06-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-06-D1-C2",
+              "text": "Not another film tonight. Thanks for coming over; I am going to have a quiet evening now.",
+              "credit": 1,
+              "explanation": "You decline the extension and communicate the next plan.",
+              "next": "AE-06-D1-REPLY2"
+            },
+            {
+              "id": "AE-06-D1-C3",
+              "text": "Yes, stay for another film.",
+              "credit": 0,
+              "explanation": "That invites the continuation you have decided you do not want.",
+              "next": "AE-06-D1-REPLY3"
+            },
+            {
+              "id": "AE-06-D1-C1",
+              "text": "I am ready to end the visit now. I need some time to myself.",
+              "credit": 1,
+              "explanation": "You state the present boundary clearly.",
+              "next": "AE-06-D1-REPLY1"
+            }
+          ]
+        },
+        "AE-06-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-06-R1-C1",
+              "text": "I answered too quickly. I want to end the visit now and have some time alone.",
+              "credit": 0,
+              "next": "AE-06-R1-REPLY"
+            }
+          ]
+        },
+        "AE-06-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Okay, I will head out.”",
+          "next": "AE-06-REVEAL"
+        },
+        "AE-06-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Okay, I will wait to hear from you.”",
+          "next": "AE-06-END"
+        },
+        "AE-06-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Yes, we can check later.”",
+          "next": "AE-06-END"
+        },
+        "AE-06-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“I will come at the same time.”",
+          "next": "AE-06-R2"
+        },
+        "AE-06-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-06-D2-C3",
+              "text": "Yes, tomorrow at the same time is confirmed.",
+              "credit": 0,
+              "explanation": "That creates a definite commitment where your preference is still undecided.",
+              "next": "AE-06-D2-REPLY3"
+            },
+            {
+              "id": "AE-06-D2-C1",
+              "text": "I do not want to set another time yet. I will let you know when I am ready to plan.",
+              "credit": 1,
+              "explanation": "You can end one visit without scheduling another.",
+              "next": "AE-06-D2-REPLY1"
+            },
+            {
+              "id": "AE-06-D2-C2",
+              "text": "Please do not assume tomorrow. Could we check another day before arranging anything?",
+              "credit": 1,
+              "explanation": "You distinguish an invitation from an unconfirmed possibility.",
+              "next": "AE-06-D2-REPLY2"
+            }
+          ]
+        },
+        "AE-06-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-06-R2-C1",
+              "text": "Tomorrow is not confirmed. I would like to decide another time.",
+              "credit": 0,
+              "next": "AE-06-R2-REPLY"
+            }
+          ]
+        },
+        "AE-06-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Ellis",
+          "text": "“Understood.”",
+          "next": "AE-06-END"
+        },
+        "AE-06-REVEAL": {
+          "type": "context",
+          "text": "Ellis says: “Okay, I will go. Should I come back at the same time tomorrow?” You do not know whether you want a visit tomorrow.",
+          "next": "AE-06-D2"
+        },
+        "AE-06-END": {
+          "type": "terminal",
+          "text": "Ending a visit does not require promising a replacement visit. You can communicate a present boundary and leave future plans open.",
+          "phrase": "I am not ready to arrange another time yet."
+        }
+      }
+    },
+    {
+      "id": "AE-07",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "Drafting versus sending",
+      "skill": "Repairing a task misunderstanding",
+      "pairId": "AE-PAIR-04",
+      "context": "You agreed to draft an announcement for a volunteer group. You did not agree to send it to members, and you do not have access to the mailing list.",
+      "goal": "Clarify the division of work and establish who can send the final announcement.",
+      "openingLine": "Riley: “You are sending the announcement tonight, right?”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-07-D1",
+      "nodes": {
+        "AE-07-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I understood the task differently. I can handle sending.”",
+          "next": "AE-07-REVEAL"
+        },
+        "AE-07-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I can take the sending step.”",
+          "next": "AE-07-REVEAL"
+        },
+        "AE-07-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“Okay, then I will not send anything.”",
+          "next": "AE-07-R1"
+        },
+        "AE-07-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-07-D1-C3",
+              "text": "Yes, I have sent it to every member already.",
+              "credit": 0,
+              "explanation": "That claims an action you have neither completed nor had access to perform.",
+              "next": "AE-07-D1-REPLY3"
+            },
+            {
+              "id": "AE-07-D1-C1",
+              "text": "I agreed to draft it. I cannot send it because I do not have the mailing list.",
+              "credit": 1,
+              "explanation": "You clarify the original scope and a practical access constraint.",
+              "next": "AE-07-D1-REPLY1"
+            },
+            {
+              "id": "AE-07-D1-C2",
+              "text": "Let us check the handoff: I have the draft, but who is responsible for sending it?",
+              "credit": 1,
+              "explanation": "You make the division explicit rather than continue the mismatch.",
+              "next": "AE-07-D1-REPLY2"
+            }
+          ]
+        },
+        "AE-07-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-07-R1-C1",
+              "text": "I have drafted it, not sent it. I do not have mailing access.",
+              "credit": 0,
+              "next": "AE-07-R1-REPLY"
+            }
+          ]
+        },
+        "AE-07-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I can send it once it is ready.”",
+          "next": "AE-07-REVEAL"
+        },
+        "AE-07-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I will wait for confirmation before sending.”",
+          "next": "AE-07-END"
+        },
+        "AE-07-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“Yes, the organiser should confirm it.”",
+          "next": "AE-07-END"
+        },
+        "AE-07-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I thought the date still needed confirmation.”",
+          "next": "AE-07-R2"
+        },
+        "AE-07-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-07-D2-C1",
+              "text": "I can send you the draft now, but the date needs approval before distribution.",
+              "credit": 1,
+              "explanation": "You distinguish a ready draft from approved content.",
+              "next": "AE-07-D2-REPLY1"
+            },
+            {
+              "id": "AE-07-D2-C2",
+              "text": "Who should confirm the date? I can ask the organiser before marking the text final.",
+              "credit": 1,
+              "explanation": "You identify the unresolved decision and the person able to resolve it.",
+              "next": "AE-07-D2-REPLY2"
+            },
+            {
+              "id": "AE-07-D2-C3",
+              "text": "Mark it approved and send it now; we can assume the date is correct.",
+              "credit": 0,
+              "explanation": "That bypasses the explicitly outstanding approval.",
+              "next": "AE-07-D2-REPLY3"
+            }
+          ]
+        },
+        "AE-07-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-07-R2-C1",
+              "text": "The date is not approved yet. Please wait while we confirm it.",
+              "credit": 0,
+              "next": "AE-07-R2-REPLY"
+            }
+          ]
+        },
+        "AE-07-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Riley",
+          "text": "“I will hold the announcement.”",
+          "next": "AE-07-END"
+        },
+        "AE-07-REVEAL": {
+          "type": "context",
+          "text": "Riley says: “I can send it, but I need the final approved text.” Your draft is ready, but the event organiser has not approved the date included in it.",
+          "next": "AE-07-D2"
+        },
+        "AE-07-END": {
+          "type": "terminal",
+          "text": "Clarifying a handoff includes both who performs the next action and whether the material is actually ready for that action.",
+          "phrase": "This part is drafted; this part still needs confirmation."
+        }
+      }
+    },
+    {
+      "id": "AE-08",
+      "version": 1,
+      "pack": "University & Everyday Life",
+      "title": "A one-time favour",
+      "skill": "Clarifying the scope of an offer",
+      "pairId": "AE-PAIR-04",
+      "context": "Last week you offered to water a housemate’s plants during one trip. They now assume you will do it every weekend. You are not available for an ongoing commitment.",
+      "goal": "Clarify the original offer and avoid creating a recurring arrangement you cannot keep.",
+      "openingLine": "Quinn: “I have put you down for the plants every weekend.”",
+      "contentStatus": "Original fictional practice; not a validated assessment",
+      "evidenceIds": [
+        "R2",
+        "R3"
+      ],
+      "startNode": "AE-08-D1",
+      "nodes": {
+        "AE-08-D1-REPLY1": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“I misunderstood how long the offer lasted.”",
+          "next": "AE-08-REVEAL"
+        },
+        "AE-08-D1-REPLY2": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“Okay, I will need another arrangement.”",
+          "next": "AE-08-REVEAL"
+        },
+        "AE-08-D1-REPLY3": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“Great, I will keep the schedule.”",
+          "next": "AE-08-R1"
+        },
+        "AE-08-D1": {
+          "type": "decision",
+          "scoredDecision": 1,
+          "prompt": "What do you say?",
+          "choices": [
+            {
+              "id": "AE-08-D1-C1",
+              "text": "My offer was for last week’s trip, not every weekend.",
+              "credit": 1,
+              "explanation": "You clarify the scope without needing to justify the boundary.",
+              "next": "AE-08-D1-REPLY1"
+            },
+            {
+              "id": "AE-08-D1-C2",
+              "text": "Please remove the recurring plan. I cannot commit to watering every weekend.",
+              "credit": 1,
+              "explanation": "You state what needs to change and what you cannot promise.",
+              "next": "AE-08-D1-REPLY2"
+            },
+            {
+              "id": "AE-08-D1-C3",
+              "text": "Yes, I will take every weekend from now on.",
+              "credit": 0,
+              "explanation": "That confirms the recurring commitment you cannot make.",
+              "next": "AE-08-D1-REPLY3"
+            }
+          ]
+        },
+        "AE-08-R1": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-08-R1-C1",
+              "text": "I cannot do every weekend. The original offer was for one trip.",
+              "credit": 0,
+              "next": "AE-08-R1-REPLY"
+            }
+          ]
+        },
+        "AE-08-R1-REPLY": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“Understood. I have a smaller question.”",
+          "next": "AE-08-REVEAL"
+        },
+        "AE-08-D2-REPLY1": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“I will arrange the evening watering separately.”",
+          "next": "AE-08-END"
+        },
+        "AE-08-D2-REPLY2": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“Okay, I will ask someone else.”",
+          "next": "AE-08-END"
+        },
+        "AE-08-D2-REPLY3": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“I will count on you for the evening.”",
+          "next": "AE-08-R2"
+        },
+        "AE-08-D2": {
+          "type": "decision",
+          "scoredDecision": 2,
+          "prompt": "What do you say next?",
+          "choices": [
+            {
+              "id": "AE-08-D2-C2",
+              "text": "I cannot cover the evening watering, so you will need someone else for Saturday’s usual task.",
+              "credit": 1,
+              "explanation": "You can decline when your availability does not cover the actual need.",
+              "next": "AE-08-D2-REPLY2"
+            },
+            {
+              "id": "AE-08-D2-C3",
+              "text": "Saturday evening is definitely covered by me.",
+              "credit": 0,
+              "explanation": "That promises the specific time when you are unavailable.",
+              "next": "AE-08-D2-REPLY3"
+            },
+            {
+              "id": "AE-08-D2-C1",
+              "text": "I can check them Saturday morning, but someone else would need to water them in the evening.",
+              "credit": 1,
+              "explanation": "You make the limits of any new offer explicit.",
+              "next": "AE-08-D2-REPLY1"
+            }
+          ]
+        },
+        "AE-08-R2": {
+          "type": "repair",
+          "prompt": "You can clarify or revise your message.",
+          "choices": [
+            {
+              "id": "AE-08-R2-C1",
+              "text": "I cannot cover Saturday evening. Please arrange someone else for that time.",
+              "credit": 0,
+              "next": "AE-08-R2-REPLY"
+            }
+          ]
+        },
+        "AE-08-R2-REPLY": {
+          "type": "reply",
+          "speaker": "Quinn",
+          "text": "“I will.”",
+          "next": "AE-08-END"
+        },
+        "AE-08-REVEAL": {
+          "type": "context",
+          "text": "Quinn says: “I misunderstood. Could you at least cover this Saturday?” You can check the plants Saturday morning, but cannot do the evening watering they normally need.",
+          "next": "AE-08-D2"
+        },
+        "AE-08-END": {
+          "type": "terminal",
+          "text": "A one-time favour does not automatically create a standing commitment. Any new offer can have its own clear limits.",
+          "phrase": "That was a one-time offer. I cannot make it a recurring commitment."
+        }
+      }
+    }
+  ],
+  "audience": "Autistic adults and invited adult friends"
+}
