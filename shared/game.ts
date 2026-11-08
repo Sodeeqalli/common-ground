@@ -30,6 +30,7 @@ export type Phase =
 export type Attempt = {
   id: string;
   rulesVersion: 3;
+  missionId?: MissionId;
   phase: Phase;
   round: number;
   roster: string[];
@@ -99,6 +100,7 @@ export type Team = {
   name: string;
   code: string;
   owner: string;
+  discoverable?: boolean;
   members: Member[];
   restored: string[];
   restoredAt: string | null;
@@ -177,11 +179,125 @@ export const COMPONENTS = [
   { id: "seeds", name: "Seed container", icon: "✿", at: { x: 5, y: 3 } },
   { id: "sensor", name: "Moisture sensor", icon: "◇", at: { x: 7, y: 3 } },
 ];
+export type MissionId = "greenhouse" | "power";
+export type MissionDefinition = {
+  id: MissionId;
+  name: string;
+  rounds: number;
+  base: Point;
+  floor: Point[];
+  batteries: Point[];
+  components: typeof COMPONENTS;
+  links: {
+    label: string;
+    key: string;
+    plate: Point;
+    gate: Point;
+    wire: string;
+  }[];
+};
+export const MISSIONS: Record<MissionId, MissionDefinition> = {
+  greenhouse: {
+    id: "greenhouse",
+    name: "Greenhouse",
+    rounds: 8,
+    base: BASE,
+    floor: FLOOR,
+    batteries: BATTERIES,
+    components: COMPONENTS,
+    links: [
+      {
+        label: "A",
+        key: "green",
+        plate: PRESSURE_PLATE,
+        gate: GATE,
+        wire: "M 5.5 7.5 V 7.12 H 3.5 V 7.5",
+      },
+    ],
+  },
+  power: {
+    id: "power",
+    name: "Power station",
+    rounds: 12,
+    base: { x: 5, y: 9 },
+    floor: [
+      [5, 9],
+      [5, 8],
+      [5, 7],
+      [1, 7],
+      [2, 7],
+      [3, 7],
+      [4, 7],
+      [6, 7],
+      [7, 7],
+      [8, 7],
+      [9, 7],
+      [3, 6],
+      [3, 5],
+      [3, 4],
+      [3, 3],
+      [2, 3],
+      [1, 3],
+      [7, 6],
+      [7, 5],
+      [7, 4],
+      [7, 3],
+      [8, 3],
+      [9, 3],
+      [5, 6],
+      [5, 5],
+    ].map(([x, y]) => ({ x, y })),
+    batteries: [
+      { x: 1, y: 7 },
+      { x: 9, y: 7 },
+      { x: 5, y: 5 },
+    ],
+    components: [
+      { id: "cell", name: "Power cell", icon: "◇", at: { x: 1, y: 3 } },
+      { id: "coil", name: "Generator coil", icon: "◎", at: { x: 9, y: 3 } },
+    ],
+    links: [
+      {
+        label: "A",
+        key: "green",
+        plate: { x: 7, y: 7 },
+        gate: { x: 3, y: 5 },
+        wire: "M 7.5 7.5 V 6.7 H 3.5 V 5.5",
+      },
+      {
+        label: "B",
+        key: "blue",
+        plate: { x: 3, y: 7 },
+        gate: { x: 7, y: 5 },
+        wire: "M 3.5 7.5 V 6.3 H 7.5 V 5.5",
+      },
+    ],
+  },
+};
+export function missionFor(a?: Attempt | null) {
+  return MISSIONS[a?.missionId || "greenhouse"];
+}
+export function plateAt(a: Attempt, p: Point) {
+  return missionFor(a).links.find((l) => same(l.plate, p));
+}
+export function objectiveGate(a: Attempt, id: string) {
+  return id === "pump" || id === "cell"
+    ? "A"
+    : a.missionId === "power" && id === "coil"
+      ? "B"
+      : null;
+}
 export const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
 export const position = (r: Robot) => r.history[r.history.length - 1];
 export const MAX_ROUNDS = 8;
-export function makeAttempt(id: string, roster: string[]): Attempt {
+export function makeAttempt(
+  id: string,
+  roster: string[],
+  missionId: MissionId = "greenhouse",
+): Attempt {
+  const map = MISSIONS[missionId];
   return {
+    missionId,
     id,
     rulesVersion: 3,
     phase: "briefing",
@@ -189,7 +305,7 @@ export function makeAttempt(id: string, roster: string[]): Attempt {
     roster,
     robots: roster.map((id) => ({
       id,
-      history: [{ ...BASE }],
+      history: [{ ...map.base }],
       energy: 3,
       cargo: null,
       batteries: [],
@@ -197,7 +313,7 @@ export function makeAttempt(id: string, roster: string[]): Attempt {
       ready: false,
       donated: false,
     })),
-    objectives: COMPONENTS.slice(0, roster.length).map((o) => ({
+    objectives: map.components.slice(0, roster.length).map((o) => ({
       ...o,
       at: { ...o.at },
       owner: null,
@@ -213,11 +329,14 @@ export function makeAttempt(id: string, roster: string[]): Attempt {
   };
 }
 // Gate A is controlled entirely by occupancy of pressure plate A.
-export function plateHolders(a: Attempt) {
-  return a.robots.filter((r) => same(position(r), PRESSURE_PLATE));
+export function plateHolders(a: Attempt, label = "A") {
+  const link = missionFor(a).links.find((l) => l.label === label);
+  return link ? a.robots.filter((r) => same(position(r), link.plate)) : [];
 }
 export function gateKeys(a: Attempt): string[] {
-  return a.sandbox || plateHolders(a).length ? ["green"] : [];
+  return missionFor(a)
+    .links.filter((l) => a.sandbox || plateHolders(a, l.label).length)
+    .map((l) => l.key);
 }
 // Other players' routes are private. Show a conditional preview with them stationary.
 export function previewMission(a: Attempt, id: string, queue: Direction[]) {
@@ -237,9 +356,10 @@ export function step(p: Point, d: Direction): Point {
     y: p.y + (d === "down" ? 1 : d === "up" ? -1 : 0),
   };
 }
-export function legal(p: Point, keys: string[]) {
+export function legal(p: Point, keys: string[], map = MISSIONS.greenhouse) {
   return (
-    FLOOR.some((f) => same(f, p)) && (!same(p, GATE) || keys.includes("green"))
+    map.floor.some((f) => same(f, p)) &&
+    map.links.every((l) => !same(p, l.gate) || keys.includes(l.key))
   );
 }
 export function preview(robot: Robot, queue: Direction[], keys: string[]) {
@@ -263,6 +383,7 @@ export function preview(robot: Robot, queue: Direction[], keys: string[]) {
   return { path, collision, spent, end: history[history.length - 1] };
 }
 export function execute(a: Attempt, sandbox = false) {
+  const map = missionFor(a);
   a.log = [];
   a.collisions = [];
   const traces: Record<string, { path: Point[]; collision: boolean }> = {};
@@ -272,7 +393,7 @@ export function execute(a: Attempt, sandbox = false) {
     traces[r.id] = { path: [], collision: false };
     earned[r.id] = 0;
   }
-  const open = () => sandbox || !!a.sandbox || plateHolders(a).length > 0;
+  const open = () => (sandbox ? map.links.map((l) => l.key) : gateKeys(a));
   let wasOpen = open();
   const collect = (r: Robot) => {
     if (r.cargo) return;
@@ -304,7 +425,7 @@ export function execute(a: Attempt, sandbox = false) {
   const move = (r: Robot, next: Point) => {
     r.history.push(next);
     traces[r.id].path.push(next);
-    const battery = BATTERIES.find((b) => same(b, next));
+    const battery = map.batteries.find((b) => same(b, next));
     if (battery) {
       const key = `${battery.x},${battery.y}`;
       if (!r.batteries.includes(key)) {
@@ -313,7 +434,7 @@ export function execute(a: Attempt, sandbox = false) {
       }
     }
     collect(r);
-    if (same(next, BASE) && r.cargo) {
+    if (same(next, map.base) && r.cargo) {
       const obj = a.objectives.find((o) => o.id === r.cargo)!;
       obj.status = "delivered";
       obj.carrier = null;
@@ -326,25 +447,28 @@ export function execute(a: Attempt, sandbox = false) {
   // Plate arrivals/departures resolve before gate entries on the same beat.
   const beats = Math.max(0, ...a.robots.map((r) => r.queue.length));
   for (let i = 0; i < beats; i++) {
-    const gateEntries: { r: Robot; next: Point }[] = [];
+    const gateEntries: { r: Robot; next: Point; key: string }[] = [];
     for (const r of a.robots) {
       if (stopped.has(r.id) || !r.queue[i] || r.energy < 1) continue;
       r.energy--;
       const next = step(position(r), r.queue[i]);
-      if (!FLOOR.some((f) => same(f, next))) block(r, i + 1, next);
-      else if (same(next, GATE)) gateEntries.push({ r, next });
+      const gate = map.links.find((l) => same(l.gate, next));
+      if (!map.floor.some((f) => same(f, next))) block(r, i + 1, next);
+      else if (gate) gateEntries.push({ r, next, key: gate.key });
       else move(r, next);
     }
     const gateOpen = open();
-    for (const { r, next } of gateEntries) {
-      if (gateOpen) move(r, next);
+    for (const { r, next, key } of gateEntries) {
+      if (gateOpen.includes(key)) move(r, next);
       else block(r, i + 1, next);
     }
     const nowOpen = open();
-    if (nowOpen !== wasOpen)
-      a.log.push(
-        `Step ${i + 1}: Gate A ${nowOpen ? "opened — plate A is occupied" : "closed — plate A is empty"}.`,
-      );
+    for (const link of map.links) {
+      if (nowOpen.includes(link.key) !== wasOpen.includes(link.key))
+        a.log.push(
+          `Step ${i + 1}: Gate ${link.label} ${nowOpen.includes(link.key) ? "opened" : "closed"}.`,
+        );
+    }
     wasOpen = nowOpen;
   }
   for (const r of a.robots) {
@@ -356,13 +480,13 @@ export function execute(a: Attempt, sandbox = false) {
   a.swap = null;
   if (
     a.objectives.every((o) => o.status === "delivered") &&
-    a.robots.every((r) => same(position(r), BASE))
+    a.robots.every((r) => same(position(r), map.base))
   )
     a.phase = "success";
-  else if (a.round >= MAX_ROUNDS) {
+  else if (a.round >= map.rounds) {
     a.phase = "ended";
     a.log.push(
-      "Round limit reached. This attempt did not restore the greenhouse.",
+      `Round limit reached. This attempt did not restore the ${map.name.toLowerCase()}.`,
     );
   } else a.phase = "round-end";
   a.paused = a.pauseRequested;
@@ -373,6 +497,7 @@ export function shortestPath(
   from: Point,
   to: Point,
   keys: string[],
+  map = MISSIONS.greenhouse,
 ): Direction[] | null {
   const q: { p: Point; path: Direction[] }[] = [{ p: from, path: [] }];
   const seen = new Set([`${from.x},${from.y}`]);
@@ -382,7 +507,7 @@ export function shortestPath(
     for (const d of ["up", "down", "left", "right"] as Direction[]) {
       const n = step(p, d),
         k = `${n.x},${n.y}`;
-      if (legal(n, keys) && !seen.has(k)) {
+      if (legal(n, keys, map) && !seen.has(k)) {
         seen.add(k);
         q.push({ p: n, path: [...path, d] });
       }

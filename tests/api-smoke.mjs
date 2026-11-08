@@ -247,3 +247,164 @@ if (process.env.QA_TEAM_REPORT) {
     JSON.stringify({ code: first.data.team.code }),
   );
 }
+
+// Opt-in directory: public summaries only, creator control, capacity and stale listings.
+const discoverName = "Discovery QA " + Date.now();
+const privateTeam = await request(null, {
+  type: "create",
+  name: discoverName,
+  alias: "QA Birch",
+});
+assert.equal(privateTeam.status, 200);
+const ownerToken = privateTeam.data.token;
+const directory = async () => {
+  const r = await fetch(
+    base + "/api/game?view=discover&q=" + encodeURIComponent(discoverName),
+  );
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("cache-control"), "no-store");
+  return (await r.json()).teams;
+};
+const ownerAction = async (type, args = {}) => {
+  const v = (await request(ownerToken)).data;
+  return request(ownerToken, body(v, type, args));
+};
+assert.deepEqual(await directory(), []);
+assert.equal(
+  (
+    await request(null, {
+      type: "join-discovered",
+      teamId: privateTeam.data.team.id,
+      alias: "QA Hidden",
+    })
+  ).status,
+  404,
+);
+assert.equal(
+  (await ownerAction("set-discovery", { enabled: true })).status,
+  200,
+);
+const listed = await directory();
+assert.equal(listed.length, 1);
+assert.deepEqual(Object.keys(listed[0]).sort(), ["id", "members", "name"]);
+const visitor = await request(null, {
+  type: "join-discovered",
+  teamId: listed[0].id,
+  alias: "QA Cedar",
+});
+assert.equal(visitor.status, 200);
+assert.equal(visitor.data.team.members.length, 2);
+assert.equal(
+  (
+    await request(
+      visitor.data.token,
+      body(visitor.data.team, "set-discovery", { enabled: false }),
+    )
+  ).status,
+  400,
+);
+assert.equal(
+  (await ownerAction("set-discovery", { enabled: false })).status,
+  200,
+);
+assert.deepEqual(await directory(), []);
+assert.equal(
+  (
+    await request(null, {
+      type: "join-discovered",
+      teamId: listed[0].id,
+      alias: "QA Stale",
+    })
+  ).status,
+  404,
+);
+assert.equal(
+  (await ownerAction("set-discovery", { enabled: true })).status,
+  200,
+);
+for (let i = 0; i < 4; i++)
+  assert.equal(
+    (
+      await request(null, {
+        type: "join-discovered",
+        teamId: listed[0].id,
+        alias: "QA Guest " + i,
+      })
+    ).status,
+    200,
+  );
+assert.deepEqual(await directory(), []);
+assert.equal(
+  (
+    await request(null, {
+      type: "join-discovered",
+      teamId: listed[0].id,
+      alias: "QA Seventh",
+    })
+  ).status,
+  400,
+);
+const publicCreation = await request(null, {
+  type: "create",
+  name: discoverName + " opt-in",
+  alias: "QA Willow",
+  discoverable: true,
+});
+assert.equal(publicCreation.status, 200);
+assert.equal((await directory())[0].id, publicCreation.data.team.id);
+
+// Persist a complete second mission through the same API that both browsers use.
+const powerTokens = [ownerToken, visitor.data.token];
+const powerIds = [privateTeam.data.team.me, visitor.data.team.me];
+async function powerAction(i, type, args = {}) {
+  const v = (await request(powerTokens[i])).data;
+  const r = await request(powerTokens[i], body(v, type, args));
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  return r.data;
+}
+await powerAction(1, "new-mission", { missionId: "power", roster: powerIds });
+await powerAction(0, "claim", { objective: "cell" });
+await powerAction(1, "claim", { objective: "coil" });
+await powerAction(0, "brief-ready");
+await powerAction(1, "brief-ready");
+const powerRoutes = [
+  [
+    ["up", "up", "left"],
+    ["up", "up", "right"],
+  ],
+  [["left", "up", "up"], ["right"]],
+  [["up", "up", "left"], []],
+  [["left", "right", "right"], []],
+  [["down", "down", "down"], []],
+  [["down"], ["up", "up", "up"]],
+  [[], ["up", "right", "right"]],
+  [[], ["left", "left", "down"]],
+  [[], ["down", "down", "down"]],
+  [
+    ["right", "right", "down"],
+    ["left", "left", "down"],
+  ],
+  [["down"], ["down"]],
+];
+let powerDone;
+for (const [round, routes] of powerRoutes.entries()) {
+  await powerAction(0, "coord-ready");
+  await powerAction(1, "coord-ready");
+  await powerAction(0, "moves", { moves: routes[0] });
+  powerDone = await powerAction(1, "moves", { moves: routes[1] });
+  assert.equal(powerDone.attempt.collisions.length, 0);
+  if (round < powerRoutes.length - 1) {
+    await powerAction(0, "next");
+    await powerAction(1, "next");
+  }
+}
+assert.equal(powerDone.attempt.phase, "success");
+assert.deepEqual(powerDone.restored, ["power"]);
+assert.deepEqual(
+  powerDone.contributions.power.map((p) => p.name),
+  ["QA Birch", "QA Cedar"],
+);
+assert.deepEqual((await request(ownerToken)).data.restored, ["power"]);
+console.log(
+  "PASS: private defaults, creator-only opt-in, minimal directory summaries, code-free joining, hidden/full listing rejection, and an eleven-round two-gate Power win persisted with both contributors.",
+);

@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import {
-  BASE,
-  PRESSURE_PLATE,
+  missionFor,
+  plateAt,
+  objectiveGate,
   position,
   same,
   type Team,
@@ -59,6 +60,7 @@ export default function MissionControl({
   onWorld,
 }: Props) {
   const a = team.attempt!,
+    map = missionFor(a),
     r = a.robots.find((r) => r.id === team.me),
     name = (id: string) =>
       team.members.find((m) => m.id === id)?.name || "Teammate";
@@ -74,10 +76,10 @@ export default function MissionControl({
       setPingKind(null);
   };
   return (
-    <section className="mission-view" aria-label="Greenhouse mission">
+    <section className="mission-view" aria-label={`${map.name} mission`}>
       <div className="mission-header">
         <div>
-          <h1>Greenhouse</h1>
+          <h1>{map.name}</h1>
         </div>
         <button className="button outline compact" onClick={onRules}>
           Rules
@@ -95,7 +97,9 @@ export default function MissionControl({
             {label}
           </span>
         ))}
-        <strong>ROUND {a.round} / 8</strong>
+        <strong>
+          ROUND {a.round} / {map.rounds}
+        </strong>
       </div>
       {ended ? (
         <section className="outcome">
@@ -105,11 +109,11 @@ export default function MissionControl({
           <h2>
             {a.phase === "success"
               ? "Mission complete"
-              : a.round >= 8
+              : a.round >= map.rounds
                 ? "Moves ended"
                 : "Mission ended"}
           </h2>
-          {a.phase === "ended" && a.round >= 8 && (
+          {a.phase === "ended" && a.round >= map.rounds && (
             <p>Unable to complete mission.</p>
           )}
           <div className="outcome-stats">
@@ -122,7 +126,7 @@ export default function MissionControl({
             </span>
             <span>
               <strong>
-                {a.robots.filter((r) => same(position(r), BASE)).length}/
+                {a.robots.filter((r) => same(position(r), map.base)).length}/
                 {a.robots.length}
               </strong>
               robots home
@@ -186,8 +190,8 @@ export default function MissionControl({
                               <small>
                                 {o.owner
                                   ? name(o.owner)
-                                  : o.id === "pump"
-                                    ? "Behind gate A"
+                                  : objectiveGate(a, o.id)
+                                    ? `Behind gate ${objectiveGate(a, o.id)}`
                                     : "Available"}
                               </small>
                             </span>
@@ -297,8 +301,8 @@ export default function MissionControl({
                           ))
                         ) : (
                           <p>
-                            {same(position(r), PRESSURE_PLATE)
-                              ? "Holding plate A"
+                            {plateAt(a, position(r))
+                              ? `Holding plate ${plateAt(a, position(r))?.label}`
                               : "No moves"}
                           </p>
                         )}
@@ -328,8 +332,8 @@ export default function MissionControl({
                           ? "Locked · waiting…"
                           : queue.length
                             ? "Lock route"
-                            : same(position(r), PRESSURE_PLATE)
-                              ? "Hold plate A"
+                            : plateAt(a, position(r))
+                              ? `Hold plate ${plateAt(a, position(r))?.label}`
                               : "Stay"}
                       </button>
                       <p className="tiny">
@@ -346,8 +350,8 @@ export default function MissionControl({
                           a.objectives.filter((o) => o.status === "delivered")
                             .length
                         }
-                        /{a.objectives.length} delivered · {8 - a.round} rounds
-                        left
+                        /{a.objectives.length} delivered ·{" "}
+                        {map.rounds - a.round} rounds left
                       </p>
                       {a.paused ? (
                         <>
@@ -443,11 +447,11 @@ export default function MissionControl({
                       {robot.id === team.me ? " · you" : ""}
                     </strong>
                     <small>
-                      {same(position(robot), PRESSURE_PLATE)
-                        ? "Holding plate A"
+                      {plateAt(a, position(robot))
+                        ? `Holding plate ${plateAt(a, position(robot))?.label}`
                         : robot.cargo
                           ? a.objectives.find((o) => o.id === robot.cargo)?.name
-                          : same(position(robot), BASE)
+                          : same(position(robot), map.base)
                             ? "At base"
                             : "On the route"}
                     </small>
@@ -469,7 +473,9 @@ export default function MissionControl({
                     <strong>{o.name}</strong>
                     <small>
                       {o.owner ? name(o.owner) : "Unclaimed"}
-                      {o.id === "pump" ? " · behind gate A" : ""}
+                      {objectiveGate(a, o.id)
+                        ? ` · behind gate ${objectiveGate(a, o.id)}`
+                        : ""}
                     </small>
                   </span>
                   <em>

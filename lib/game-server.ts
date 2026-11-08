@@ -3,7 +3,9 @@ import {
   makeAttempt,
   execute,
   COLORS,
-  FLOOR,
+  MISSIONS,
+  missionFor,
+  type MissionId,
   same,
   STRATEGY_SIGNALS,
   PLATE_SIGNALS,
@@ -54,6 +56,7 @@ export function newTeam(
     code,
     name,
     owner: member,
+    discoverable: false,
     members: [{ id: member, name: alias, color: COLORS[0] }],
     restored: [],
     restoredAt: null,
@@ -89,8 +92,8 @@ export function normalizeTeam(team: Team): Team {
   // Retire pending task offers without changing ownership or blocking readiness.
   if (a) a.swap = null;
   // Only backfill from a retained success, never the current membership or a failed retry.
-  if (a?.phase === "success" && team.restored.includes("greenhouse"))
-    recordContributors(team, "greenhouse", a.roster);
+  if (a?.phase === "success" && team.restored.includes(missionFor(a).id))
+    recordContributors(team, missionFor(a).id, a.roster);
   if (a && a.rulesVersion !== 3) {
     if (!["success", "ended"].includes(a.phase)) a.phase = "ended";
     a.rulesVersion = 3;
@@ -109,6 +112,15 @@ export function applyAction(
   const a = team.attempt;
   const actor = team.members.find((m) => m.id === member);
   demand(actor, "You are not a member of this team.");
+  if (type === "set-discovery") {
+    demand(
+      member === team.owner,
+      "Only the team creator can change discovery.",
+    );
+    demand(typeof action.enabled === "boolean", "Choose a discovery setting.");
+    team.discoverable = action.enabled;
+    return;
+  }
   if (type === "new-mission") {
     demand(
       !a || ["success", "ended"].includes(a.phase),
@@ -123,7 +135,16 @@ export function applyAction(
         roster.every((id) => team.members.some((m) => m.id === id)),
       "Choose yourself and one teammate.",
     );
-    team.attempt = makeAttempt(crypto.randomUUID(), roster);
+    const mission = action.missionId ?? "greenhouse";
+    demand(
+      typeof mission === "string" && Object.hasOwn(MISSIONS, mission),
+      "Choose an available mission.",
+    );
+    team.attempt = makeAttempt(
+      crypto.randomUUID(),
+      roster,
+      mission as MissionId,
+    );
     team.energyRequests = [];
     team.pings = [];
     team.signals = [];
@@ -272,7 +293,7 @@ export function applyAction(
       at &&
         Number.isInteger(at.x) &&
         Number.isInteger(at.y) &&
-        FLOOR.some((p) => same(p, at)),
+        missionFor(a).floor.some((p) => same(p, at)),
       "Choose a walkable map tile.",
     );
     demand(
@@ -468,11 +489,12 @@ export function applyAction(
     if (a.robots.every((r) => r.ready)) {
       execute(a);
       if (String(a.phase) === "success") {
-        if (!team.restored.includes("greenhouse")) {
-          team.restored.push("greenhouse");
+        const area = missionFor(a).id;
+        if (!team.restored.includes(area)) {
+          team.restored.push(area);
           team.restoredAt = new Date().toISOString();
         }
-        recordContributors(team, "greenhouse", a.roster);
+        recordContributors(team, area, a.roster);
       }
     }
     return;

@@ -1,11 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
-  FLOOR,
-  BASE,
-  PRESSURE_PLATE,
-  GATE,
-  BATTERIES,
+  missionFor,
   same,
   position,
   previewMission,
@@ -38,6 +34,7 @@ export default function MissionMap({
   reducedMotion?: boolean;
   onPing?: (p: Point) => void;
 }) {
+  const map = missionFor(attempt);
   const r = attempt.robots.find((r) => r.id === me),
     keys = gateKeys(attempt),
     plan = r ? previewMission(attempt, me, queue) : null;
@@ -82,46 +79,56 @@ export default function MissionMap({
       <div
         className="mission-map"
         role="group"
-        aria-label="Mission map. Base at column 6 row 10, pressure plate A at column 6 row 8 controls gate A at column 4 row 8. Select a ping type to mark a walkable tile."
+        aria-label={`${map.name} map. Base at column ${map.base.x + 1} row ${map.base.y + 1}. ${map.links.map((l) => `Plate ${l.label} at column ${l.plate.x + 1} row ${l.plate.y + 1} opens gate ${l.label} at column ${l.gate.x + 1} row ${l.gate.y + 1}.`).join(" ")} Select a ping type to mark a walkable tile.`}
       >
-        <svg
-          className={`plate-wire ${keys.length ? "wire-open" : ""}`}
-          viewBox="0 0 11 11"
-          aria-hidden="true"
-        >
-          <path d="M 5.5 7.5 V 7.12 H 3.5 V 7.5" />
-        </svg>
+        {map.links.map((link) => (
+          <svg
+            key={link.label}
+            className={`plate-wire ${keys.includes(link.key) ? "wire-open" : ""}`}
+            viewBox="0 0 11 11"
+            aria-hidden="true"
+          >
+            <path
+              d={link.wire}
+              style={
+                link.label === "B" ? { strokeDasharray: "0.04 0.1" } : undefined
+              }
+            />
+          </svg>
+        ))}
         {Array.from({ length: 121 }, (_, i) => {
           const p = { x: i % 11, y: Math.floor(i / 11) },
-            floor = FLOOR.some((f) => same(f, p)),
-            base = same(p, BASE),
-            gate = same(p, GATE),
-            plate = same(p, PRESSURE_PLATE),
-            battery = BATTERIES.some((b) => same(b, p));
+            floor = map.floor.some((f) => same(f, p)),
+            base = same(p, map.base),
+            gate = map.links.find((l) => same(p, l.gate)),
+            plate = map.links.find((l) => same(p, l.plate)),
+            link = gate || plate,
+            isOpen = !!link && keys.includes(link.key),
+            battery = map.batteries.some((b) => same(b, p));
           const obj = attempt.objectives.find(
               (o) => same(o.at, p) && o.status === "waiting",
             ),
             robots = attempt.robots.filter((r) => same(position(r), p)),
             pathAt = plan?.path.findIndex((q) => same(q, p)) ?? -1,
             ping = pings.filter((q) => same(q.at, p)).at(-1);
-          const label = `Tile ${p.x + 1}, ${p.y + 1}${base ? ": Base" : plate ? `: Pressure plate A ${keys.length ? "pressed" : "released"}; opens gate A` : gate ? `: Gate A ${keys.length ? "open" : "closed"}; controlled by plate A` : obj ? `: ${obj.name}` : ""}${robots.length ? ` · ${robots.map((r) => name(r.id)).join(", ")}` : ""}${ping ? ` · ${name(ping.member)}: ${ping.kind}` : ""}`;
+          const label = `Tile ${p.x + 1}, ${p.y + 1}${base ? ": Base" : plate ? `: Pressure plate ${plate.label} ${isOpen ? "pressed" : "released"}; opens gate ${plate.label}` : gate ? `: Gate ${gate.label} ${isOpen ? "open" : "closed"}; controlled by plate ${gate.label}` : obj ? `: ${obj.name}` : ""}${robots.length ? ` · ${robots.map((r) => name(r.id)).join(", ")}` : ""}${ping ? ` · ${name(ping.member)}: ${ping.kind}` : ""}`;
           const content = (
             <>
               {!floor && i % 7 === 0 && <span className="tile-tree">♣</span>}
               {base && <span className="tile-icon home">⌂</span>}
               {gate && (
-                <span className={`tile-icon gate ${keys.length ? "open" : ""}`}>
-                  {keys.length ? "╶" : "▥"}
+                <span className={`tile-icon gate ${isOpen ? "open" : ""}`}>
+                  {isOpen ? "╶" : "▥"}
                 </span>
               )}
               {plate && (
-                <span
-                  className={`tile-icon plate ${keys.length ? "pressed" : ""}`}
-                >
+                <span className={`tile-icon plate ${isOpen ? "pressed" : ""}`}>
                   ▣
                 </span>
               )}
-              {(plate || gate) && <span className="tile-link-label">A</span>}
+              {(plate || gate) && (
+                <span className="tile-link-label">{link?.label}</span>
+              )}
               {battery && (
                 <span
                   className={`tile-icon battery ${r?.batteries.includes(`${p.x},${p.y}`) ? "used" : ""}`}
@@ -193,7 +200,7 @@ export default function MissionMap({
             <button
               type="button"
               key={i}
-              className={`tile floor ${base ? "base" : ""} ${plate || gate ? `linked-tile ${keys.length ? "link-open" : "link-closed"}` : ""} ${pathAt >= 0 ? "path" : ""}`}
+              className={`tile floor ${base ? "base" : ""} ${plate || gate ? `linked-tile ${isOpen ? "link-open" : "link-closed"}` : ""} ${pathAt >= 0 ? "path" : ""}`}
               title={label}
               aria-label={label}
               aria-disabled={!pingKind}
@@ -215,10 +222,10 @@ export default function MissionMap({
           <i>⌂</i> Base / delivery
         </span>
         <span>
-          <i>▣ A</i> Pressure plate
+          <i>▣</i> Pressure plate
         </span>
         <span>
-          <i>▥ A</i> Linked gate
+          <i>▥</i> Linked gate
         </span>
         <span>
           <i>ϟ</i> +1 energy

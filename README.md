@@ -6,15 +6,15 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 
 ## Playable now
 
-- Create a named team and invite friends using a code. Two members play each mission; up to six belong to the team and share one world. Any member can choose a partner.
-- **Restore the Greenhouse:** choose responsibilities, plan with strategy signals, ping the map, share energy or hand off a task, then execute routes together.
+- Create a named team and invite friends using a code, or opt into Discover teams so others can find and join it. Two members play each mission; up to six belong to the team and share one world. Any member can choose a partner.
+- **Restore the Greenhouse:** choose responsibilities, plan with strategy signals, ping the map, share energy, then execute routes together.
 - Pressure plate A automatically opens gate A while occupied. Leaving closes it; no charges, activation button or holding cost. Matching A badges and a connecting wire show the relationship. The pump is behind the gate with no lower bypass. Start with 3 energy; gain 3 per new round, capped at 6.
 - Deliver every required component and bring every robot home within eight rounds to permanently restore the greenhouse. Successful completion and restoration are saved together.
-- Persistent energy requests have Give / Not now / Cancel controls. Task handoffs require recipient consent. Seven preset signals support explicit acknowledgements. Each player has one signal and one map ping per round; replacements are throttled. Free chat is optional in Settings and off by default.
+- Persistent energy requests have Give / Not now / Cancel controls. Seven preset signals support explicit acknowledgements. Each player has one signal and one map ping per round; replacements are throttled. Free chat is optional in Settings and off by default.
 - **Our world** is a quiet four-part picture. Saved mission completions colour their area; unfinished areas stay as a pale sketch. No reveal animation.
 - No countdown or music. Optional sound, larger text, reduced motion and quiet announcements. Keyboard and touch controls; responsive phone layout.
 
-**Only Our world and Team missions are exposed.** Three future regions are shown as locked. This first build includes one complete team mission. It is research-informed practice, not a validated therapy or evidence of real-world communication improvement.
+**Our world, Team missions and Discover teams are exposed.** Greenhouse and Power station are playable; Bridge and Workshop remain locked. Power station has two independent plate/gate pairs and a twelve-round limit, requiring partners to take turns supporting one another. Each mission restores its own world region and records both contributors. It is research-informed practice, not a validated therapy or evidence of real-world communication improvement.
 
 ## Team documents
 
@@ -64,7 +64,7 @@ npm run test:api  # requires the local dev server and migrated local DB; run npm
 npm run build
 ```
 
-The rule suite covers all 72 archived dialogue paths, durable requests, signal/ping validation and round expiry, consented handoffs, per-step plate arrivals/departures/handoffs, energy, collisions, pause/resume, old-state upgrades, real failure, and eight-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
+The rule suite covers all 72 archived dialogue paths, durable requests, signal/ping validation and round expiry, retired task-transfer rejection, per-step plate arrivals/departures/handoffs, energy, collisions, pause/resume, old-state upgrades, real failure, and eight-round greenhouse wins (including legacy 3/4-player saves), an eleven-round Power win, independent A/B gates, discovery controls and the twelve-round deadline. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
 
 ## Architecture
 

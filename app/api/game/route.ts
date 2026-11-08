@@ -36,6 +36,17 @@ async function getTeam(id: string) {
 }
 export async function GET(req: Request) {
   try {
+    const url = new URL(req.url);
+    if (url.searchParams.get("view") === "discover") {
+      const q = text(url.searchParams.get("q"), 40);
+      const rows = await env
+        .DB!.prepare(
+          "SELECT id, json_extract(state, '$.name') AS name, json_array_length(state, '$.members') AS members FROM teams WHERE json_extract(state, '$.discoverable') = 1 AND json_array_length(state, '$.members') < 6 AND instr(lower(json_extract(state, '$.name')), lower(?)) > 0 ORDER BY name COLLATE NOCASE, id LIMIT 50",
+        )
+        .bind(q)
+        .all<{ id: string; name: string; members: number }>();
+      return reply({ teams: rows.results });
+    }
     const member = await identity(req);
     if (!member) return reply({ error: "Please create or join a team." }, 401);
     const team = await getTeam(member.team_id);
@@ -60,7 +71,11 @@ export async function POST(req: Request) {
     const raw = await req.text();
     if (raw.length > 16000) return reply({ error: "Request too large." }, 413);
     const body = JSON.parse(raw);
-    if (body.type === "create" || body.type === "join") {
+    if (
+      body.type === "create" ||
+      body.type === "join" ||
+      body.type === "join-discovered"
+    ) {
       const alias = text(body.alias, 24);
       if (!alias) return reply({ error: "Choose a robot name." }, 400);
       const member = crypto.randomUUID(),
@@ -76,6 +91,7 @@ export async function POST(req: Request) {
             .slice(0, 12)
             .toUpperCase();
         const team = newTeam(id, code, name, member, alias);
+        team.discoverable = body.discoverable === true;
         await env.DB!.batch([
           env
             .DB!.prepare(
@@ -91,9 +107,14 @@ export async function POST(req: Request) {
         return reply({ token, team: publicView(team, member) });
       }
       const code = text(body.code, 30).replaceAll(" ", "").toUpperCase();
+      const discovered = body.type === "join-discovered";
       const row = await env
-        .DB!.prepare("SELECT state FROM teams WHERE code = ?")
-        .bind(code)
+        .DB!.prepare(
+          discovered
+            ? "SELECT state FROM teams WHERE id = ?"
+            : "SELECT state FROM teams WHERE code = ?",
+        )
+        .bind(discovered ? text(body.teamId, 80) : code)
         .first<{ state: string }>();
       if (!row)
         return reply(
@@ -101,6 +122,8 @@ export async function POST(req: Request) {
           404,
         );
       const team = JSON.parse(row.state) as Team;
+      if (discovered && team.discoverable !== true)
+        return reply({ error: "This team is no longer discoverable." }, 404);
       if (team.members.length >= 6)
         return reply({ error: "This team already has six members." }, 400);
       const version = team.version;

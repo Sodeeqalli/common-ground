@@ -14,13 +14,22 @@ import {
   Sprout,
   Lock,
   LoaderCircle,
+  Users,
 } from "lucide-react";
 import WorldArt, { RobotArt, WorldContributors } from "../components/world-art";
 import MissionControl from "../components/mission-control";
 import TeamRequests, { FreeChat } from "../components/team-coordination";
-import { readinessContext, type Team, type Direction } from "../shared/game";
+import DiscoverTeams, { type ListedTeam } from "../components/discover-teams";
+import {
+  MISSIONS,
+  missionFor,
+  readinessContext,
+  type MissionId,
+  type Team,
+  type Direction,
+} from "../shared/game";
 type View = Team & { me: string };
-type Screen = "world" | "mission";
+type Screen = "world" | "mission" | "discover";
 function Button({
   children,
   onClick,
@@ -59,6 +68,9 @@ export default function CommonGround() {
     [alias, setAlias] = useState(""),
     [name, setName] = useState(""),
     [code, setCode] = useState("");
+  const [discoverable, setDiscoverable] = useState(false);
+  const [joinTarget, setJoinTarget] = useState<ListedTeam | null>(null);
+  const [launchMap, setLaunchMap] = useState<MissionId>("greenhouse");
   const [settings, setSettings] = useState(false),
     [motion, setMotion] = useState(false),
     [quiet, setQuiet] = useState(false),
@@ -278,7 +290,14 @@ export default function CommonGround() {
       const r = await fetch("/api/game", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: auth, alias, name, code }),
+        body: JSON.stringify({
+          type: auth === "join" && joinTarget ? "join-discovered" : auth,
+          alias,
+          name,
+          code,
+          discoverable,
+          teamId: joinTarget?.id,
+        }),
       });
       const data = (await r.json()) as View & {
         error?: string;
@@ -290,6 +309,7 @@ export default function CommonGround() {
       setToken(data.token);
       setTeam(data.team);
       setAuth(null);
+      setJoinTarget(null);
       setScreen("world");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to join.");
@@ -297,7 +317,8 @@ export default function CommonGround() {
       setBusy(false);
     }
   }
-  function launchMission() {
+  function launchMission(missionId: MissionId = "greenhouse") {
+    setLaunchMap(missionId);
     if (!team) {
       setAuth("create");
       return;
@@ -336,7 +357,8 @@ export default function CommonGround() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   });
-  const restored = !!team?.restored.includes("greenhouse");
+  const currentMap = missionFor(a);
+  const restoredCount = team?.restored.length || 0;
   const activeMission =
     screen === "mission" && !!a && !["success", "ended"].includes(a.phase);
   return (
@@ -384,7 +406,9 @@ export default function CommonGround() {
             >
               <Home size={19} />
               <span>Our world</span>
-              {restored && <span className="nav-count">1</span>}
+              {restoredCount > 0 && (
+                <span className="nav-count">{restoredCount}</span>
+              )}
             </button>
             <button
               className={screen === "mission" ? "nav-item active" : "nav-item"}
@@ -395,6 +419,13 @@ export default function CommonGround() {
               {a && !["success", "ended"].includes(a.phase) && (
                 <span className="live-dot" />
               )}
+            </button>
+            <button
+              className={screen === "discover" ? "nav-item active" : "nav-item"}
+              onClick={() => setScreen("discover")}
+            >
+              <Users size={19} />
+              <span>Discover teams</span>
             </button>
           </nav>
           <div className="team-panel">
@@ -437,7 +468,13 @@ export default function CommonGround() {
                 <Button kind="outline" onClick={() => setAuth("create")}>
                   Create a team <Plus size={15} />
                 </Button>
-                <button className="text-button" onClick={() => setAuth("join")}>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    setJoinTarget(null);
+                    setAuth("join");
+                  }}
+                >
                   Join a team <ArrowRight size={14} />
                 </button>
               </>
@@ -451,7 +488,11 @@ export default function CommonGround() {
           <div className="status-line">
             <span className="breadcrumb">
               {team?.name || "Common Ground"} <ChevronRight size={13} />{" "}
-              {screen === "world" ? "Our world" : "Greenhouse"}
+              {screen === "world"
+                ? "Our world"
+                : screen === "discover"
+                  ? "Discover teams"
+                  : currentMap.name}
             </span>
             {team && (
               <span className={`connection ${connected ? "" : "offline"}`}>
@@ -513,32 +554,40 @@ export default function CommonGround() {
                 )}
               </section>
               <section className="world-missions" aria-label="Missions">
-                <div className="world-mission available">
-                  <span className="mission-number">01</span>
-                  <div>
-                    <h2>
-                      Greenhouse{" "}
-                      {restored && <Check size={16} aria-label="Complete" />}
-                    </h2>
-                    <small>2 players · 8 rounds</small>
-                  </div>
-                  <Button
-                    onClick={() =>
-                      a && !["success", "ended"].includes(a.phase)
-                        ? setScreen("mission")
-                        : launchMission()
-                    }
-                  >
-                    {a && !["success", "ended"].includes(a.phase)
-                      ? "Continue"
-                      : restored
-                        ? "Replay"
-                        : "Play"}
-                    <ArrowRight size={16} />
-                  </Button>
-                </div>
+                {Object.values(MISSIONS).map((mission, index) => {
+                  const finished = !!team?.restored.includes(mission.id);
+                  const active = !!a && !["success", "ended"].includes(a.phase);
+                  const continuing = active && currentMap.id === mission.id;
+                  return (
+                    <div className="world-mission available" key={mission.id}>
+                      <span className="mission-number">0{index + 1}</span>
+                      <div>
+                        <h2>
+                          {mission.name}{" "}
+                          {finished && (
+                            <Check size={16} aria-label="Complete" />
+                          )}
+                        </h2>
+                        <small>
+                          2 players · {mission.rounds} rounds
+                          {mission.id === "power" ? " · Advanced" : ""}
+                        </small>
+                      </div>
+                      <Button
+                        disabled={active && !continuing}
+                        onClick={() =>
+                          continuing
+                            ? setScreen("mission")
+                            : launchMission(mission.id)
+                        }
+                      >
+                        {continuing ? "Continue" : finished ? "Replay" : "Play"}
+                        <ArrowRight size={16} />
+                      </Button>
+                    </div>
+                  );
+                })}
                 {[
-                  ["02", "Power station"],
                   ["03", "Bridge"],
                   ["04", "Workshop"],
                 ].map(([n, name]) => (
@@ -555,6 +604,16 @@ export default function CommonGround() {
                 ))}
               </section>
             </>
+          )}
+          {screen === "discover" && (
+            <DiscoverTeams
+              currentTeam={team?.name}
+              onJoin={(target) => {
+                setJoinTarget(target);
+                setAuth("join");
+                setError("");
+              }}
+            />
           )}
           {screen === "mission" && a && team && (
             <MissionControl
@@ -575,7 +634,7 @@ export default function CommonGround() {
               <Sprout size={48} />
               <h1>Team mission</h1>
               <p>Join a team to play.</p>
-              <Button onClick={launchMission}>Choose team</Button>
+              <Button onClick={() => launchMission()}>Choose team</Button>
             </div>
           )}
         </main>
@@ -602,7 +661,13 @@ export default function CommonGround() {
               <X size={20} />
             </button>
             <Sprout className="modal-leaf" size={32} />
-            <h2>{auth === "create" ? "Create a team" : "Join a team"}</h2>
+            <h2>
+              {auth === "create"
+                ? "Create a team"
+                : joinTarget
+                  ? `Join ${joinTarget.name}`
+                  : "Join a team"}
+            </h2>
             <form onSubmit={submitAuth}>
               <label>
                 Your robot name
@@ -627,14 +692,31 @@ export default function CommonGround() {
                   />
                 </label>
               ) : (
-                <label>
-                  Team invite code
+                !joinTarget && (
+                  <label>
+                    Team invite code
+                    <input
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder="12-character team code"
+                      required
+                      autoCapitalize="characters"
+                    />
+                  </label>
+                )
+              )}
+              {auth === "create" && (
+                <label className="setting-row">
+                  <span>
+                    <strong>List in Discover teams</strong>
+                    <small>
+                      Anyone using the game can find and join your team.
+                    </small>
+                  </span>
                   <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="12-character team code"
-                    required
-                    autoCapitalize="characters"
+                    type="checkbox"
+                    checked={discoverable}
+                    onChange={(e) => setDiscoverable(e.target.checked)}
                   />
                 </label>
               )}
@@ -656,7 +738,10 @@ export default function CommonGround() {
             </form>
             <button
               className="text-button"
-              onClick={() => setAuth(auth === "create" ? "join" : "create")}
+              onClick={() => {
+                setJoinTarget(null);
+                setAuth(auth === "create" ? "join" : "create");
+              }}
             >
               {auth === "create" ? "Join instead" : "Create instead"}
             </button>
@@ -679,6 +764,7 @@ export default function CommonGround() {
               <X size={20} />
             </button>
             <h2>Choose a partner</h2>
+            <p className="tiny">{MISSIONS[launchMap].name}</p>
             {team.members
               .filter((m) => m.id !== team.me)
               .map((m) => (
@@ -701,7 +787,9 @@ export default function CommonGround() {
             )}
             <Button
               disabled={busy || selected.length !== 2}
-              onClick={() => act("new-mission", { roster: selected })}
+              onClick={() =>
+                act("new-mission", { roster: selected, missionId: launchMap })
+              }
             >
               Start mission <ArrowRight size={16} />
             </Button>
@@ -750,6 +838,29 @@ export default function CommonGround() {
                 />
               </label>
             ))}
+            {team?.owner === team?.me && team && (
+              <label className="setting-row">
+                <span>
+                  <strong>List in Discover teams</strong>
+                  <small>
+                    Anyone using the game can find and join your team.
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={!!team.discoverable}
+                  disabled={busy}
+                  onChange={(e) =>
+                    void act("set-discovery", { enabled: e.target.checked })
+                  }
+                />
+              </label>
+            )}
+            {error && (
+              <p role="alert" className="form-error">
+                {error}
+              </p>
+            )}
             <p className="tiny">
               Membership is saved in this browser. Leaving or clearing browser
               data removes it.
@@ -789,15 +900,16 @@ export default function CommonGround() {
             <h2>Rules</h2>
             <ol>
               <li>
-                Deliver all components and bring everyone home within 8 rounds.
+                Deliver all components and bring everyone home within{" "}
+                {currentMap.rounds} rounds.
               </li>
               <li>
                 1 energy per move. Start with 3; gain 3 each round. Maximum 6.
                 Staying discards unused energy.
               </li>
               <li>
-                Stand on plate A to open gate A. Leaving closes it. Holding is
-                free.
+                Stand on a lettered plate to open its matching gate. Leaving
+                closes it. Holding is free.
               </li>
               <li>
                 Moves resolve together, one step at a time. Plate changes apply

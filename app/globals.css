@@ -2742,6 +2742,9 @@ main > footer {
 .world-mission.available {
   grid-column: 1 / -1;
 }
+.world-mission.available > div {
+  min-width: 0;
+}
 .world-mission h2 {
   display: flex;
   align-items: center;
@@ -2755,7 +2758,13 @@ main > footer {
 }
 .world-mission .button {
   margin-left: auto;
-  min-width: 100px;
+  width: 10em;
+  min-width: 10em;
+  flex-shrink: 0;
+  justify-content: space-between;
+}
+.world-mission .button svg {
+  flex-shrink: 0;
 }
 .mission-number {
   font-size: 12px;
@@ -3144,4 +3153,47 @@ main > footer {
   .map-notice:not(:empty) {
     margin-bottom: 10px;
   }
+}
+
+.team-search {
+  display: grid;
+  gap: 8px;
+  max-width: 440px;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.team-search input {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 12px;
+}
+.discover-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.discover-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 18px;
+  background: #efeee9;
+}
+.discover-card h2 {
+  font-size: 23px;
+  overflow-wrap: anywhere;
+}
+.discover-card p {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.discover-card .button {
+  flex-shrink: 0;
 }
