@@ -2,6 +2,8 @@
 
 8 November 2026 · Shipped scope: adult browser game, teams of up to six, two players per mission, two playable maps. Rules and the complete research register: [team specification](team-spec.md). R1–R16 below refer to that register.
 
+**For the actual presentation, use the shorter [timed six-slide script](pitch-script.md).** This document is the expanded evidence and Q&A reference. The current [submission checklist](submission-checklist.md) records the live rubric, video limits, deadline discrepancy and remaining actions for Dino Devs.
+
 ## Positioning
 
 **Common Ground is a cooperative game designed to support everyday communication and give lasting bonds a place to grow.** Two people coordinate robots through strategic missions; their achievements become part of a persistent world shared with their small team. The challenge comes from decisions and interdependence. Presentation and communication remain calm and configurable.

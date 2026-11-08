@@ -20,6 +20,8 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 
 ## Team documents
 
+- [Timed presentation script and demo plan](docs/pitch-script.md)
+- [Rubric, submission checklist and Devpost draft](docs/submission-checklist.md)
 - [Full team specification](docs/team-spec.md)
 - [Final pitch, evidence, comparisons and demo walkthrough](docs/final-pitch.md)
 - [Eight archived adult dialogue scripts — not in the shipped UI](docs/adult-dialogues.md)
