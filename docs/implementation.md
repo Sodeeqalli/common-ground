@@ -18,7 +18,7 @@ The current rules are [team-spec.md](team-spec.md), version 6. Missions no longe
 
 Live updates use 1.5-second HTTP polling, not WebSockets. Invalidated shared plans require review. A pending request is stored independently of signals, so later signals cannot replace it. Signal kinds are validated server-side; arbitrary signal kinds are rejected. Acknowledgements do not change readiness or task ownership. No external AI service, tone classifier or communication score is used.
 
-Older active attempts return an explicit restart notice and are ended under the new rules. Teams, saved chat and previously restored regions are retained. New attempts reset cargo, signals, pings and requests. The signals update preserves existing pressure-plate attempts. Free chat is hidden in the UI unless enabled in local comfort settings. Local browser identity still has no cross-device recovery.
+Attempts from the old relay rules are ended safely during normalization. The obsolete migration banner is cleared from saved state and no longer rendered. Current pressure-plate attempts are preserved. Teams, saved chat and previously restored regions are retained. New attempts reset cargo, signals, pings and requests. The signals update preserves existing pressure-plate attempts. Free chat is hidden in the UI unless enabled in local comfort settings. Local browser identity still has no cross-device recovery.
 
 ## Verification
 
@@ -39,3 +39,5 @@ Selected roster members automatically enter a newly received active mission, clo
 Stay (empty routes, including plate holding) now discards remaining energy on resolution; the next round grants the usual three. Players who submit movement retain unused energy. The clock and teammate waiting time have no energy penalty. Collision records contain server-resolved source, attempted and rollback tiles. The map plays a single subtle bump on a newly received resolution; normal polling and refreshes do not replay it. Reduced motion skips the effect. The pre-move collision warning is removed.
 
 Per-area `contributions` stores deduplicated member ID/name/colour snapshots. Credits are saved atomically with successful mission resolution, including all roster members. Replays append new contributors without changing the original restoration date. Read normalization can recover legacy credits from a retained successful attempt; missing history is never inferred from current membership. World attribution is a static text/avatar row below the picture; missions remain 2–4 players.
+
+The UI uses a lower-saturation sage and warm-stone palette with softer light surfaces. Text and functional state labels retain contrast; the world image and robot art are gently desaturated. No dark mode or extra animation is introduced.

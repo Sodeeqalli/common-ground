@@ -78,6 +78,8 @@ function recordContributors(team: Team, area: string, roster: string[]) {
 // Older active attempts cannot safely resume under the new resource/gate rules.
 // Normalize on read and next write, preserving team identity and restored regions.
 export function normalizeTeam(team: Team): Team {
+  // Clear the obsolete banner on read and on the next persisted action.
+  delete team.upgradeNotice;
   team.energyRequests ??= [];
   team.pings ??= [];
   team.signals ??= [];
@@ -88,8 +90,6 @@ export function normalizeTeam(team: Team): Team {
   if (a?.phase === "success" && team.restored.includes("greenhouse"))
     recordContributors(team, "greenhouse", a.roster);
   if (a && a.rulesVersion !== 3) {
-    team.upgradeNotice =
-      "The gate now uses a pressure plate. Start a fresh expedition with the updated map; your restored world is safe.";
     if (!["success", "ended"].includes(a.phase)) a.phase = "ended";
     a.rulesVersion = 3;
     for (const key of ["powerCharges", "powerBy", "keys"])

@@ -421,7 +421,22 @@ test("legacy attempt upgrade preserves restored regions, team and chat", () => {
   assert.equal(t.attempt.phase, "ended");
   assert.deepEqual(t.restored, ["greenhouse"]);
   assert.equal(t.messages[0].text, "Hello");
-  assert(t.upgradeNotice);
+  assert.equal(t.upgradeNotice, undefined);
+});
+test("stale migration banners clear without changing current missions or world credits", () => {
+  const t = fixture();
+  t.upgradeNotice = "The gate now uses a pressure plate.";
+  t.restored = ["greenhouse"];
+  t.contributions = { greenhouse: t.members.map((m) => ({ ...m })) };
+  const mission = structuredClone(t.attempt);
+  const credits = structuredClone(t.contributions);
+  const view = publicView(t, "p0");
+  assert.equal(view.upgradeNotice, undefined);
+  normalizeTeam(t);
+  assert.equal(t.upgradeNotice, undefined);
+  assert.deepEqual(t.attempt, mission);
+  assert.deepEqual(t.contributions, credits);
+  assert.deepEqual(t.restored, ["greenhouse"]);
 });
 test("invalid moves, stale attempts and non-host launch are rejected", () => {
   const t = fixture();

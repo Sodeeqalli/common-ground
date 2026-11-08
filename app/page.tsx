@@ -478,9 +478,6 @@ export default function CommonGround() {
               onAction={act}
             />
           )}
-          {team?.upgradeNotice && (
-            <div className="soft-note">{team.upgradeNotice}</div>
-          )}
           {error && (
             <div role="alert" className="alert">
               <span>{error}</span>

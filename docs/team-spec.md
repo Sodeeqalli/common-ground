@@ -107,7 +107,7 @@ React/TypeScript with the supplied Vinext/Cloudflare Worker starter. D1 stores t
 
 Signals and safe phase-local actions can revalidate after a competing write. Readiness only carries over if jobs, energy and positions are unchanged. Shared decisions that no longer match the viewed state ask the player to review and retry. Successful restoration is part of the same state update as mission success.
 
-Older active attempts are ended with an explicit upgrade notice because their previous map and relay rules cannot safely resume under the pressure-plate rules. Team identity and restored regions remain. Old chat remains available when a player enables Free chat. The signals and energy updates preserve current pressure-plate attempts; the Stay rule takes effect on their next resolution. No destructive schema migration is needed.
+Attempts from the old map and relay rules are ended safely under the pressure-plate rules. The obsolete upgrade banner is cleared; current pressure-plate attempts are preserved. Team identity and restored regions remain. Old chat remains available when a player enables Free chat. The signals and energy updates preserve current pressure-plate attempts; the Stay rule takes effect on their next resolution. No destructive schema migration is needed.
 
 Selected players automatically enter a new active mission when polling receives it; any waiting dialog closes. Non-hosts cannot change the roster. Returning to Our world during an existing mission does not force repeated navigation.
 
