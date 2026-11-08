@@ -11,10 +11,10 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 - Pressure plate A automatically opens gate A while occupied. Leaving closes it; no charges, activation button or holding cost. Matching A badges and a connecting wire show the relationship. The pump is behind the gate with no lower bypass. Start with 3 energy; gain 3 per new round, capped at 6.
 - Deliver every required component and bring every robot home within eight rounds to permanently restore the greenhouse. Successful completion and restoration are saved together.
 - Persistent energy requests have Give / Not now / Cancel controls. Task handoffs require recipient consent. Free text chat keeps the latest 60 messages. Map pings identify their sender and location.
-- Individual **Practice** holds all eight adult conversations and an open-gate movement sandbox. It never awards mission energy or changes team progress.
+- **Our world** is a quiet four-part picture. Saved mission completions colour their area; unfinished areas stay as a pale sketch. No reveal animation.
 - No countdown or music. Optional sound, larger conversation text, reduced motion and quiet messages. Keyboard and touch controls; responsive phone layout.
 
-**Race and the other three regions are explicitly marked planned.** This first build includes one complete team mission. It is research-informed practice, not a validated therapy or evidence of real-world communication improvement.
+**Only Our world and Team missions are exposed.** Three future regions are shown as locked. This first build includes one complete team mission. It is research-informed practice, not a validated therapy or evidence of real-world communication improvement.
 
 ## Team documents
 
@@ -64,7 +64,7 @@ npm run test:api  # requires the local dev server and migrated local DB; run npm
 npm run build
 ```
 
-The rule suite covers all 72 optional dialogue paths, durable requests, chat/ping validation, consented handoffs, per-step plate arrivals/departures/handoffs, energy, collisions, pause/resume, old-state upgrades, real failure, and seven-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
+The rule suite covers all 72 archived dialogue paths, durable requests, chat/ping validation, consented handoffs, per-step plate arrivals/departures/handoffs, energy, collisions, pause/resume, old-state upgrades, real failure, and seven-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
 
 ## Architecture
 
@@ -73,8 +73,7 @@ React + TypeScript on the supplied Vinext/Cloudflare Worker starter. D1 stores t
 - `shared/game.ts`: deterministic map, route preview and movement resolution.
 - `lib/game-server.ts`: authoritative mission, chat, ping and request transitions.
 - `app/api/game/route.ts`: guest identity, D1 persistence and optimistic concurrency.
-- `app/api/scenarios/route.ts`: independent practice API.
-- `app/page.tsx`: world, mission, practice and comfort controls.
+- `app/page.tsx`: world, mission and comfort controls.
 - `components/`: mission controls, team channel, interactive maze and SVG art.
 - `content/`: the eight authored adult conversations.
 

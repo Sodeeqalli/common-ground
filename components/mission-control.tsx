@@ -75,14 +75,10 @@ export default function MissionControl({
     <>
       <div className="mission-header">
         <div>
-          <div className="eyebrow">TEAM MISSION 01 · SHARED STRATEGY</div>
-          <h1>Restore the greenhouse</h1>
-          <p>
-            Hold the plate. Open the gate. Bring every component and robot home.
-          </p>
+          <h1>Greenhouse</h1>
         </div>
         <button className="button outline compact" onClick={onRules}>
-          Mission rules
+          Rules
         </button>
       </div>
       <div className="phase-track">
@@ -104,22 +100,9 @@ export default function MissionControl({
           <div className="outcome-icon">
             {a.phase === "success" ? <Sprout size={46} /> : <Home size={46} />}
           </div>
-          <div className="eyebrow">
-            {a.phase === "success"
-              ? "SAVED TO YOUR TEAM’S WORLD"
-              : "EXPEDITION ENDED"}
-          </div>
           <h2>
-            {a.phase === "success"
-              ? "You brought it home. Together."
-              : "Time to rethink the route."}
+            {a.phase === "success" ? "Mission complete" : "Mission ended"}
           </h2>
-          <p>
-            {a.phase === "success"
-              ? "All components delivered and all robots home. The greenhouse is permanently restored."
-              : team.upgradeNotice ||
-                "The attempt did not restore the greenhouse. Earlier world progress is safe. Regroup and try a different plan."}
-          </p>
           <div className="outcome-stats">
             <span>
               <strong>
@@ -137,7 +120,8 @@ export default function MissionControl({
             </span>
           </div>
           {a.log.length > 0 && (
-            <div className="round-log">
+            <details className="round-log">
+              <summary>Round log</summary>
               {a.log.map((line, i) => (
                 <p key={i}>
                   {team.members.reduce(
@@ -146,10 +130,10 @@ export default function MissionControl({
                   )}
                 </p>
               ))}
-            </div>
+            </details>
           )}
           <button className="button primary" onClick={onWorld}>
-            Return to our world <ArrowRight size={16} />
+            Our world <ArrowRight size={16} />
           </button>
         </section>
       ) : (
@@ -166,14 +150,14 @@ export default function MissionControl({
                   </strong>
                   <p>
                     {holders.length
-                      ? `${holders.map((r) => name(r.id)).join(", ")} is holding the plate. Stay until your teammate is through.`
-                      : "Stand on plate A to open gate A. Leaving the plate closes the gate."}
+                      ? holders.map((r) => name(r.id)).join(", ")
+                      : "Plate empty"}
                   </p>
                 </div>
               </div>
               <div className="ping-toolbar">
                 <MapPin size={16} />
-                <span>Ping a tile:</span>
+                <span>Ping:</span>
                 {(["meet", "help", "route"] as const).map((kind) => (
                   <button
                     key={kind}
@@ -244,7 +228,7 @@ export default function MissionControl({
                 ))}
               </div>
               <div className="objectives">
-                <h3>Our responsibilities</h3>
+                <h3>Tasks</h3>
                 {a.objectives.map((o) => (
                   <div key={o.id}>
                     <span
@@ -273,22 +257,13 @@ export default function MissionControl({
             <section className="action-panel">
               {!r ? (
                 <>
-                  <h2>You’re watching.</h2>
-                  <p>
-                    You can chat with the team and join the next expedition.
-                  </p>
+                  <h2>Spectating</h2>
                 </>
               ) : (
                 <>
                   {a.phase === "briefing" && (
                     <>
-                      <div className="eyebrow">PLAN BEFORE YOU LEAVE</div>
-                      <h2>Who’s collecting what?</h2>
-                      <p>
-                        Claim one component each. Someone must stand on plate A
-                        while a teammate crosses gate A and brings the pump
-                        back.
-                      </p>
+                      <h2>Choose a task</h2>
                       <div className="job-list">
                         {a.objectives.map((o) => (
                           <button
@@ -305,7 +280,7 @@ export default function MissionControl({
                                   ? name(o.owner)
                                   : o.id === "pump"
                                     ? "Behind gate A"
-                                    : "Available to claim"}
+                                    : "Available"}
                               </small>
                             </span>
                             {o.owner === team.me && <Check size={18} />}
@@ -318,18 +293,9 @@ export default function MissionControl({
                           disabled={busy}
                           onClick={() => act("release")}
                         >
-                          Change my responsibility
+                          Change task
                         </button>
                       )}
-                      <div className="soft-note">
-                        <strong>What makes this a team mission?</strong>
-                        <p>
-                          Stand on pressure plate A to open gate A. Hold it
-                          while your teammate collects the pump and comes back
-                          through. Leaving closes the gate. No charges or
-                          activation button.
-                        </p>
-                      </div>
                       <button
                         className="button primary"
                         disabled={
@@ -339,43 +305,13 @@ export default function MissionControl({
                         }
                         onClick={() => act("brief-ready")}
                       >
-                        {a.rosterReady.includes(team.me)
-                          ? "Waiting for teammates…"
-                          : "Ready to begin"}
+                        {a.rosterReady.includes(team.me) ? "Waiting…" : "Ready"}
                       </button>
-                      <p className="tiny">
-                        3 energy to start. +3 each new round, stored up to 6. No
-                        quiz or conversation score.
-                      </p>
                     </>
                   )}
                   {a.phase === "coordination" && (
                     <>
-                      <div className="eyebrow">
-                        TEAM PLANNING · ROUND {a.round}
-                      </div>
-                      <h2>Agree on the next move.</h2>
-                      <p>
-                        You have <strong>{r.energy} energy</strong>. Check the
-                        map, share what you need, and agree who will hold the
-                        pressure plate.
-                      </p>
-                      <div className="plate-control">
-                        <span className="link-badge">A</span>
-                        <strong>
-                          {holders.length
-                            ? "Gate A is open"
-                            : "Gate A is closed"}
-                        </strong>
-                        <p>
-                          {same(position(r), PRESSURE_PLATE)
-                            ? "You are standing on plate A. Queue no moves to keep the gate open. Leave only when your teammate is clear."
-                            : "Plate A is at column 6, row 8. Gate A is at column 4, row 8. Anyone standing on the plate holds the gate open."}
-                        </p>
-                        <small>
-                          Holding costs no energy. No button to activate.
-                        </small>
-                      </div>
+                      <h2>Plan together</h2>
                       <div className="give-list">
                         {a.robots
                           .filter((x) => x.id !== team.me)
@@ -413,10 +349,7 @@ export default function MissionControl({
                               <summary>
                                 Offer your {o.name.toLowerCase()} task
                               </summary>
-                              <p>
-                                They can accept or decline. This transfers
-                                responsibility, not cargo.
-                              </p>
+                              <p>Transfers the task, not the item.</p>
                               {a.robots
                                 .filter((x) => x.id !== team.me)
                                 .map((other) => (
@@ -443,35 +376,21 @@ export default function MissionControl({
                         }
                         onClick={() => act("coord-ready")}
                       >
-                        {a.rosterReady.includes(team.me)
-                          ? "Waiting for the team…"
-                          : "Ready to plan my route"}
+                        {a.rosterReady.includes(team.me) ? "Waiting…" : "Ready"}
                       </button>
                       <p className="tiny">
-                        {a.rosterReady.length}/{a.roster.length} ready. Changed
-                        energy or jobs reset readiness.
+                        {a.rosterReady.length}/{a.roster.length} ready
                       </p>
                     </>
                   )}
                   {a.phase === "planning" && (
                     <>
-                      <div className="eyebrow">CHOOSE YOUR ROUTE</div>
-                      <h2>
-                        {same(position(r), PRESSURE_PLATE)
-                          ? "Hold the plate or move on?"
-                          : "Make each step count."}
-                      </h2>
-                      <p>
-                        Queue up to {r.energy} moves. Gate A is currently{" "}
-                        {holders.length ? "open" : "closed"}.
-                      </p>
-                      <p className="soft-note">
-                        Preview assumes teammates stay put. Everyone moves one
-                        step at a time; arriving on plate A opens the gate,
-                        leaving closes it on that same step.
+                      <h2>Your route</h2>
+                      <p className="tiny">
+                        Preview assumes teammates stay put.
                       </p>
                       <div className="energy-display">
-                        <span>AVAILABLE ENERGY</span>
+                        <span>Energy</span>
                         <strong>
                           ϟ {r.energy}
                           <small> / 6</small>
@@ -507,8 +426,8 @@ export default function MissionControl({
                         ) : (
                           <p>
                             {same(position(r), PRESSURE_PLATE)
-                              ? "Stay on plate A to hold gate A open."
-                              : "No moves queued. Unspent energy carries over."}
+                              ? "Holding plate A"
+                              : "No moves"}
                           </p>
                         )}
                       </div>
@@ -530,8 +449,7 @@ export default function MissionControl({
                       </div>
                       {previewMission(a, r.id, queue).collision && (
                         <div className="warning">
-                          Blocked route: costs 1 energy, rolls back one step and
-                          cancels the remaining moves.
+                          Blocked: −1 energy, back one step. Route stops.
                         </div>
                       )}
                       <button
@@ -540,32 +458,32 @@ export default function MissionControl({
                         onClick={() => act("moves", { moves: queue })}
                       >
                         {r.ready
-                          ? "Route locked · waiting…"
+                          ? "Locked · waiting…"
                           : queue.length
-                            ? "Lock in my route"
+                            ? "Lock route"
                             : same(position(r), PRESSURE_PLATE)
-                              ? "Stay here & hold gate A"
-                              : "Stay here & save energy"}
+                              ? "Hold plate A"
+                              : "Stay"}
                       </button>
                       <p className="tiny">
                         {a.robots.filter((x) => x.ready).length}/
-                        {a.roster.length} routes ready. Routes resolve together.
+                        {a.roster.length} ready
                       </p>
                     </>
                   )}
                   {a.phase === "round-end" && (
                     <>
-                      <div className="eyebrow">REVIEW AND ADAPT</div>
-                      <h2>Round {a.round} complete.</h2>
+                      <h2>Round {a.round} complete</h2>
                       <p>
                         {
                           a.objectives.filter((o) => o.status === "delivered")
                             .length
                         }
-                        /{a.objectives.length} components delivered.{" "}
-                        {8 - a.round} rounds left.
+                        /{a.objectives.length} delivered · {8 - a.round} rounds
+                        left
                       </p>
-                      <div className="round-log">
+                      <details className="round-log">
+                        <summary>Round log</summary>
                         {a.log.length ? (
                           a.log.map((line, i) => (
                             <p key={i}>
@@ -576,22 +494,20 @@ export default function MissionControl({
                             </p>
                           ))
                         ) : (
-                          <p>Positions saved. Check your team’s next move.</p>
+                          <p>No changes.</p>
                         )}
-                      </div>
+                      </details>
                       {a.paused ? (
                         <>
-                          <div className="soft-note">
-                            The team is taking a break. No countdown.
-                          </div>
+                          <div className="soft-note">Paused</div>
                           <button
                             className="button primary"
                             disabled={busy || a.resumes.includes(team.me)}
                             onClick={() => act("resume")}
                           >
                             {a.resumes.includes(team.me)
-                              ? "Waiting for everyone…"
-                              : "I’m ready to resume"}
+                              ? "Waiting…"
+                              : "Resume"}
                           </button>
                         </>
                       ) : (
@@ -601,8 +517,8 @@ export default function MissionControl({
                           onClick={() => act("next")}
                         >
                           {a.rosterReady.includes(team.me)
-                            ? "Waiting for the team…"
-                            : "Next round · +3 energy each"}
+                            ? "Waiting…"
+                            : "Next round · +3 energy"}
                         </button>
                       )}
                     </>
@@ -651,13 +567,11 @@ export default function MissionControl({
                   onClick={() => act("pause")}
                 >
                   <Pause size={14} />
-                  {a.pauseRequested
-                    ? "Break requested"
-                    : "Break after this round"}
+                  {a.pauseRequested ? "Break requested" : "Request break"}
                 </button>
                 {team.owner === team.me && (
                   <button className="text-button muted" onClick={onRetreat}>
-                    End this attempt
+                    End mission
                   </button>
                 )}
               </div>

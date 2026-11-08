@@ -72,8 +72,8 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
                 </strong>
                 <p>
                   {a?.phase === "coordination"
-                    ? "Transfers are available before routes lock."
-                    : "The request is saved. Energy can be shared at the next planning discussion."}
+                    ? ""
+                    : "Available next planning phase."}
                   {q.passedBy.length > 0 &&
                     ` ${q.passedBy.map(name).join(", ")} cannot spare one right now.`}
                 </p>
@@ -141,7 +141,6 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
                   {a.objectives.find((o) => o.id === a.swap!.objective)?.name}{" "}
                   to {name(a.swap.to)}
                 </strong>
-                <p>The task changes hands only after the recipient accepts.</p>
               </div>
               <div className="request-buttons">
                 {a.swap.to === team.me && (
@@ -167,9 +166,7 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
           {a?.pauseRequested && active && (
             <p className="request-status">
               A teammate requested a break.{" "}
-              {a.paused
-                ? "Everyone must resume before the next round."
-                : "The team will pause after this round."}
+              {a.paused ? "Waiting to resume." : "Pause after this round."}
             </p>
           )}
           {completed.map((q) => (
@@ -208,7 +205,6 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
           <header>
             <div>
               <strong>{team.name}</strong>
-              <small>Invited team · messages are saved · 280 characters</small>
             </div>
             <button aria-label="Close team chat" onClick={() => setOpen(false)}>
               <X size={18} />
@@ -221,10 +217,7 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
             aria-live={quiet ? "off" : "polite"}
           >
             {!team.messages.length && (
-              <p className="channel-empty">
-                Make a plan in your own words. Short messages and pings work
-                too.
-              </p>
+              <p className="channel-empty">No messages yet.</p>
             )}
             {team.messages.map((m, i) => (
               <article
@@ -240,17 +233,17 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
             ))}
           </div>
           <form onSubmit={send}>
-            <label htmlFor="team-message">Message your team</label>
+            <label htmlFor="team-message">Message</label>
             <textarea
               id="team-message"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={280}
               rows={2}
-              placeholder="e.g. Please hold plate A until I’m back through."
+              placeholder="Message…"
             />
             <div>
-              <small>{draft.length}/280 · No message score</small>
+              <small>{draft.length}/280</small>
               <button
                 className="button primary compact"
                 disabled={busy || !draft.trim()}

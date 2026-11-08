@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "Common Ground — A world built together",
+  title: "Common Ground",
   description:
-    "A calm cooperative robot expedition. Practise everyday conversations, share responsibilities, and restore a world with your team.",
+    "A cooperative robot game. Complete missions to build your shared world.",
   icons: { icon: "/favicon.svg" },
 };
 export default function RootLayout({

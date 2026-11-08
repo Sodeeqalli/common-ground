@@ -163,17 +163,7 @@ assert.deepEqual((await read()).energyRequests, []);
 assert.deepEqual((await read()).pings, []);
 await action(0, "retreat");
 assert.deepEqual((await read(1)).restored, ["greenhouse"]);
-const catalog = await (await fetch(base + "/api/scenarios")).json();
-assert.equal(catalog.length, 8);
-const practice = await (
-  await fetch(base + "/api/scenarios", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: "AE-01" }),
-  })
-).json();
-assert(practice.node.choices.every((c) => !("credit" in c)));
-assert.deepEqual((await read()).restored, ["greenhouse"]);
+assert.equal((await fetch(base + "/api/scenarios")).status, 404);
 console.log(
-  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, seven-round strategic victory, saved world, retry preservation and eight independent practice scenarios.",
+  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, seven-round strategic victory, saved world, retry preservation and removal of the Practice endpoint.",
 );

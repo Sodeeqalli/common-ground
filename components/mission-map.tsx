@@ -41,8 +41,8 @@ export default function MissionMap({
   return (
     <div className={`map-wrap ${pingKind ? "ping-active" : ""}`}>
       <div className="map-meta">
-        <span>GREENHOUSE EXPEDITION</span>
-        <span>All routes visible · No countdown</span>
+        <span>Map</span>
+        <span></span>
       </div>
       <div
         className="mission-map"
@@ -153,11 +153,6 @@ export default function MissionMap({
           );
         })}
       </div>
-      <p className="plate-caption">
-        {attempt.sandbox
-          ? "Practice: gate A stays open."
-          : `Plate A → Gate A: ${keys.length ? "OPEN — plate occupied" : "CLOSED — plate empty"}. Stand to open; step off to close.`}
-      </p>
       <div className="map-legend">
         <span>
           <i>⌂</i> Base / delivery

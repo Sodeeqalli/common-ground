@@ -1,14 +1,14 @@
 # Common Ground — Team specification
 
-Version 4 · 8 November 2026 · Browser game · Adults only
+Version 5 · 8 November 2026 · Browser game · Adults only
 
 ## Product and scope
 
 A calm cooperative robot strategy game for autistic adults and invited adult friends. Teams restore a persistent shared world by completing missions together. Communication is useful to the mission: hold a pressure plate, request energy, offer responsibility, mark a route and agree on timing.
 
-There are no mandatory scenario questions, dialogue-score rewards or AI judgments in Team Missions. Eight original adult conversations remain in optional Practice. The mission is allowed to be difficult and teams can lose. No one needs to type, speak or use a prescribed sentence to receive movement energy.
+There are no mandatory scenario questions, dialogue-score rewards or AI judgments in Team Missions. Practice and Race are removed from the app. The eight conversations remain archived in the repository. The mission is allowed to be difficult and teams can lose. No one needs to type, speak or use a prescribed sentence to receive movement energy.
 
-The shipped world has one playable mission, Restore the Greenhouse. The power station, bridge and workshop are labelled Planned. Race is also planned. Practice conversations and a movement sandbox are playable.
+The shipped world has one playable mission, Restore the Greenhouse. The power station, bridge and workshop are locked areas in an unfinished picture. Completing the greenhouse mission colours its area, using saved team progress. There is no reveal animation.
 
 ## Teams and persistence
 
@@ -71,7 +71,7 @@ All players explicitly continue to the next round. Anyone can request a break at
 ### Team chat
 
 - Free text, one to 280 characters per message; the latest 60 messages are retained.
-- Available in the world, during missions and during Practice for current team members.
+- Available in the world, during missions for current team members.
 - Sender and round are shown. Text is rendered literally, never as HTML.
 - A fixed chat button indicates unread messages. There is no required script, voice channel or message score.
 - Quiet mode disables chat announcements; it does not hide actionable requests.
@@ -88,11 +88,11 @@ Task offers appear in the same inbox with Accept and Decline/cancel. Only the re
 
 Break requests also remain visible. Quiet mode retains these mission-critical controls. New attempts clear old requests and pings while retaining team chat and world progress.
 
-## Optional adult Practice
+## Presentation
 
-AE-01 through AE-08 remain available individually, with their authored choices, replies, new information, repairs and explanations. They do not interrupt missions or change energy, resources or world restoration. The bank’s internal criterion credits are content metadata, not player ratings. No live model evaluates a response.
+Only Our world and Team missions appear in navigation. Our world uses a sparse four-part illustration: restored areas have muted colour; unfinished areas are pale. Colours are accompanied by the completion count and a checkmark. No animations, flashing or celebration effects. Existing world progress is reused without resetting teams.
 
-The movement sandbox has a permanently open gate and replenishes six practice energy after each sequence. It does not affect a team.
+Copy is limited to labels, actions, useful state and errors. Detailed mechanics are behind Rules; round events are collapsed under Round log. The earlier scenario scripts remain in content and documentation, but their UI and API route are removed.
 
 ## Comfort and inclusion
 
@@ -111,7 +111,7 @@ Older active attempts are ended with an explicit upgrade notice because their pr
 ## Acceptance and demonstration
 
 - Two browsers can exchange free text and see persistent energy requests, fulfilment confirmations, accepted/declined task offers and labelled map pings.
-- Completing or skipping optional Practice never changes the mission’s state.
+- Completed areas stay coloured after reload or replay. Practice and Race are absent.
 - A single robot cannot leave the plate and cross the closed gate alone.
 - Plate occupancy updates on each step, including arrival, departure and handoff; roster order does not affect gate access.
 - Coordinated 2/3/4-player teams can complete the required deliveries within eight rounds.
@@ -139,7 +139,7 @@ A broader 2025 review included 20 studies and 349 participants, with a positive 
 
 ### Our design inferences
 
-Persistent teams and shared-world missions are proposed ways to create reasons to return and cooperate. We have not shown that persistence, component delivery or energy sharing improves belonging. Team missions create opportunities to share information, request help, negotiate responsibilities and confirm plans. The eight authored conversations remain optional individual practice. Do not claim that navigating walls itself teaches social understanding.
+Persistent teams and shared-world missions are proposed ways to create reasons to return and cooperate. We have not shown that persistence, component delivery or energy sharing improves belonging. Team missions create opportunities to share information, request help, negotiate responsibilities and confirm plans. The eight authored conversations are archived and not part of this MVP. Do not claim that navigating walls itself teaches social understanding.
 
 The authored choices are justified by their visible fictional goals and constraints. Research does not certify those answer keys. Circa is not required: it is an NLP dataset, not an adult autism curriculum. [Dataset context](https://github.com/google-research-datasets/circa)
 
