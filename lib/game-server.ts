@@ -110,7 +110,6 @@ export function applyAction(
   const actor = team.members.find((m) => m.id === member);
   demand(actor, "You are not a member of this team.");
   if (type === "new-mission") {
-    demand(member === team.owner, "Only the team host can start a mission.");
     demand(
       !a || ["success", "ended"].includes(a.phase),
       "Finish or retreat from the current mission first.",
@@ -118,12 +117,11 @@ export function applyAction(
     const roster = action.roster as string[];
     demand(
       Array.isArray(roster) &&
-        roster.length >= 2 &&
-        roster.length <= 4 &&
+        roster.length === 2 &&
         new Set(roster).size === roster.length &&
         roster.includes(member) &&
         roster.every((id) => team.members.some((m) => m.id === id)),
-      "Choose two to four team members, including the host.",
+      "Choose yourself and one teammate.",
     );
     team.attempt = makeAttempt(crypto.randomUUID(), roster);
     team.energyRequests = [];
@@ -256,7 +254,6 @@ export function applyAction(
     return;
   }
   if (type === "retreat") {
-    demand(member === team.owner, "Only the host can end this attempt.");
     demand(
       !["success", "ended"].includes(a.phase),
       "This attempt has already ended.",

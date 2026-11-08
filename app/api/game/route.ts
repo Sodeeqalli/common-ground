@@ -101,11 +101,8 @@ export async function POST(req: Request) {
           404,
         );
       const team = JSON.parse(row.state) as Team;
-      if (team.members.length >= 12)
-        return reply(
-          { error: "This prototype team already has twelve members." },
-          400,
-        );
+      if (team.members.length >= 6)
+        return reply({ error: "This team already has six members." }, 400);
       const version = team.version;
       team.version++;
       team.members.push({

@@ -13,7 +13,7 @@ The shipped world has one playable mission, Restore the Greenhouse. The power st
 ## Teams and persistence
 
 - A team has a name, invite code, members, latest expedition and permanently restored regions.
-- Up to twelve members can belong to a team. The host selects two to four for an expedition, including themselves.
+- Teams are designed for 2–6 members (one creator while inviting). Any member can choose one partner and start a two-player mission. One mission is active per team at a time.
 - Invited members outside the expedition can watch. Mission actions belong to the selected roster.
 - Guest identity is remembered in this browser. Clearing browser data or leaving membership loses that identity; rejoining creates another robot. Full account recovery is not built.
 - Completed areas show a quiet “Built by” row with robot avatars and contributor names. Every member of a successful mission roster is credited, including plate holders and helpers. Successful replays add new people once each; failures and spectators earn no completion credit. Name and colour snapshots persist through retries and later membership changes. Legacy records only recover names from a retained successful attempt; otherwise the area says “Built by your team” until a new success supplies names. There are no ranks or contribution scores.
@@ -91,7 +91,7 @@ Break requests also remain visible. Quiet mode retains these mission-critical co
 
 ## Presentation
 
-Only Our world and Team missions appear in navigation. Our world uses a sparse four-part illustration: restored areas have muted colour; unfinished areas are pale. Colours are accompanied by the completion count and a checkmark. The world picture has no animations, flashing or celebration effects. Mission collisions use one subtle 650 ms bump and rollback with a small “Hit obstacle” caption, with no shake, sound or warning banner. Reduced motion shows the final position and caption without movement. Existing world progress is reused without resetting teams.
+Only Our world and Team missions appear in navigation. Our world uses a sparse four-part illustration: restored areas have muted colour; unfinished areas are pale. Colours are accompanied by the completion count and a checkmark. The world picture has no animations, flashing or celebration effects. Mission collisions use one subtle 650 ms bump and rollback with a readable “Hit obstacle” strip above the grid, with no shake, sound or warning banner. Reduced motion shows the final position and caption without movement. Existing world progress is reused without resetting teams.
 
 Copy is limited to labels, actions, useful state and errors. Detailed mechanics are behind Rules. Round log is removed from the UI; show current positions, energy, tasks, gate state and brief collision feedback. At the eight-round limit, the outcome reads “Moves ended” and “Unable to complete mission.” The earlier scenario scripts remain in content and documentation, but their UI and API route are removed.
 
@@ -109,7 +109,7 @@ Signals and safe phase-local actions can revalidate after a competing write. Rea
 
 Attempts from the old map and relay rules are ended safely under the pressure-plate rules. The obsolete upgrade banner is cleared; current pressure-plate attempts are preserved. Team identity and restored regions remain. Old chat remains available when a player enables Free chat. The signals and energy updates preserve current pressure-plate attempts; the Stay rule takes effect on their next resolution. No destructive schema migration is needed.
 
-Selected players automatically enter a new active mission when polling receives it; any waiting dialog closes. Non-hosts cannot change the roster. Returning to Our world during an existing mission does not force repeated navigation.
+Selected players automatically enter a new active mission when polling receives it; any waiting dialog closes. Any member can choose a partner for a new mission; an active mission cannot be replaced. Returning to Our world during an existing mission does not force repeated navigation.
 
 ## Acceptance and demonstration
 
@@ -150,4 +150,10 @@ The authored choices are justified by their visible fictional goals and constrai
 
 ### Mission layout
 
-On desktop, the complete square board fits in the available viewport. Route controls, requests, gate status, pings, signals, and crew share an independently scrolling right panel. Phones, short windows and narrow layouts stack the board above controls. Entry nickname guidance and the route-preview note are omitted.
+On desktop, the complete square board fits in the available viewport. Route controls, requests, pings, signals, and crew share an independently scrolling right panel. Phones, short windows and narrow layouts stack the board above controls. Entry nickname guidance and the route-preview note are omitted.
+
+### Availability and ending an attempt
+
+There is no response deadline, auto-move or inactivity penalty. Players can leave and return to saved mission state. Either mission participant can explicitly end the attempt after confirmation, then choose another teammate for a fresh mission from round one. This discards that unfinished attempt, but completed areas and contributor credits stay saved. Spectators, including the team creator when not playing, cannot end the pair's mission. New missions always contain exactly two players. Existing saved three/four-player attempts and larger teams are preserved; new joins stop at six members.
+
+Pitch: “A team of up to six builds one shared world, two people at a time.” Do not claim automatic partner matching, availability detection, mid-mission substitutions or simultaneous missions; those are not built.

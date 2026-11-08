@@ -16,7 +16,6 @@ import { useState } from "react";
 import {
   BASE,
   PRESSURE_PLATE,
-  plateHolders,
   position,
   same,
   type Team,
@@ -66,8 +65,7 @@ export default function MissionControl({
   const [pingKind, setPingKind] = useState<"meet" | "help" | "route" | null>(
     null,
   );
-  const ended = ["success", "ended"].includes(a.phase),
-    holders = plateHolders(a);
+  const ended = ["success", "ended"].includes(a.phase);
   const pending = (team.energyRequests || []).some(
     (q) => q.attemptId === a.id && q.from === team.me && q.status === "pending",
   );
@@ -379,20 +377,7 @@ export default function MissionControl({
                   )}
                 </>
               )}
-            </section>{" "}
-            <div className={`plate-status ${holders.length ? "is-open" : ""}`}>
-              <span className="link-badge">A</span>
-              <div>
-                <strong>
-                  Plate A → Gate A · {holders.length ? "OPEN" : "CLOSED"}
-                </strong>
-                <p>
-                  {holders.length
-                    ? holders.map((r) => name(r.id)).join(", ")
-                    : "Plate empty"}
-                </p>
-              </div>
-            </div>
+            </section>
             <div className="ping-toolbar">
               <MapPin size={16} />
               <span>Ping:</span>
@@ -517,11 +502,9 @@ export default function MissionControl({
                     <Pause size={14} />
                     {a.pauseRequested ? "Break requested" : "Request break"}
                   </button>
-                  {team.owner === team.me && (
-                    <button className="text-button muted" onClick={onRetreat}>
-                      End mission
-                    </button>
-                  )}
+                  <button className="text-button muted" onClick={onRetreat}>
+                    End mission
+                  </button>
                 </div>
               </div>
             )}

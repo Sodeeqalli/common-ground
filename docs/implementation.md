@@ -4,7 +4,7 @@ The current rules are [team-spec.md](team-spec.md), version 6. Missions no longe
 
 ## Working features
 
-- Persistent teams and world restoration; two-to-four-player greenhouse expedition.
+- Persistent teams and world restoration; two-player greenhouse mission in a team of up to six.
 - Shared planning, route previews, fixed energy income and an eight-round limit.
 - Automatic occupancy-controlled plate A and gate A; no charges or activation API. Movement resolves one step per robot at a time, plate changes before gate entries. Pump access has no bypass or additional interlock.
 - Seven preset signals, one per player, with explicit acknowledgements and round expiry. Plate requests have Yes/No replies; the letter is editable. Free chat is opt-in under Settings, with an expandable bottom-left bar.
@@ -22,7 +22,7 @@ Attempts from the old relay rules are ended safely during normalization. The obs
 
 ## Verification
 
-The rule suite covers all 72 archived dialogue paths, automatic mission energy, automatic plate activation/deactivation, same-step crossings, roster-order independence, plate handoffs, safe gate exits, conditional route previews, batteries, durable energy requests, retired task-offer rejection and saved-mission recovery, labelled pings, signal validation, acknowledgements, replacement, throttling and round expiry, pause/recharge semantics, legacy state upgrades and coordinated wins for 2/3/4 players. A loss test reaches the eight-round deadline without completing the retrievals.
+The rule suite covers all 72 archived dialogue paths, automatic mission energy, automatic plate activation/deactivation, same-step crossings, roster-order independence, plate handoffs, safe gate exits, conditional route previews, batteries, durable energy requests, retired task-offer rejection and saved-mission recovery, labelled pings, signal validation, acknowledgements, replacement, throttling and round expiry, pause/recharge semantics, legacy state upgrades and two-player coordinated wins and completion of legacy 3/4-player saves. A loss test reaches the eight-round deadline without completing the retrievals.
 
 The local HTTP smoke test uses two independent identities and concurrent signals, readiness and route submissions. It verifies signal delivery and acknowledgement, optional chat and text validation, round expiry, request delivery and exactly-once fulfilment, changed-plan rejection, ping propagation, task-transfer endpoint removal, an eight-round victory, world persistence and Practice endpoint removal.
 
@@ -34,14 +34,16 @@ The owner-private hosted preview is not a judge-accessible deployment. GitHub ac
 
 The mural uses a built-in image-generation asset in `public/world-mural-calm.png`, described in `docs/world-art.md`. SVG clipping reveals each saved region, with a pale monochrome base for unfinished areas. No animation or extra progress storage is introduced.
 
-Selected roster members automatically enter a newly received active mission, closing the waiting dialog. Polls for the same mission do not override manual world navigation. Non-hosts see a read-only waiting roster.
+Selected roster members automatically enter a newly received active mission, closing the waiting dialog. Polls for the same mission do not override manual world navigation. Any team member can choose one partner; the launcher always joins their own mission.
 
 Stay (empty routes, including plate holding) now discards remaining energy on resolution; the next round grants the usual three. Players who submit movement retain unused energy. The clock and teammate waiting time have no energy penalty. Collision records contain server-resolved source, attempted and rollback tiles. The map plays a single subtle bump on a newly received resolution; normal polling and refreshes do not replay it. Reduced motion skips the effect. The pre-move collision warning is removed.
 
-Per-area `contributions` stores deduplicated member ID/name/colour snapshots. Credits are saved atomically with successful mission resolution, including all roster members. Replays append new contributors without changing the original restoration date. Read normalization can recover legacy credits from a retained successful attempt; missing history is never inferred from current membership. World attribution is a static text/avatar row below the picture; missions remain 2–4 players.
+Per-area `contributions` stores deduplicated member ID/name/colour snapshots. Credits are saved atomically with successful mission resolution, including all roster members. Replays append new contributors without changing the original restoration date. Read normalization can recover legacy credits from a retained successful attempt; missing history is never inferred from current membership. World attribution is a static text/avatar row below the picture; new missions have exactly two players.
 
 The UI uses a lower-saturation sage and warm-stone palette with softer light surfaces. Text and functional state labels retain contrast; the world image and robot art are gently desaturated. No dark mode or extra animation is introduced.
 
 Active desktop missions use a viewport-height shell, compact header and a size-contained board column. The board scales to both available width and height; controls scroll independently on the right. Focused controls-panel arrow keys scroll the panel instead of queuing a route. Narrow or short viewports fall back to the stacked page layout. Requests render once, inside the panel during active missions and in the existing location otherwise. Optional chat renders once as a collapsible bottom-left bar across world and mission screens.
 
 Obstacle feedback is a static, high-visibility strip above the board. It names the affected players and respects Quiet mode for announcements; no additional motion or sound is introduced.
+
+Team joins stop at six members. Mission launch validates exactly two distinct existing members including the launcher; no owner restriction. Ending remains roster-restricted and available to either participant with confirmation. Active attempts cannot be overwritten, and restored areas/credits survive an ended attempt. HTTP and rule checks cover non-owner pairs, spectator denial and membership limits. The redundant plate/gate status card is removed; the map retains its labelled plate, gate and connecting line.

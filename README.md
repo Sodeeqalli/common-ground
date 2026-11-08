@@ -6,7 +6,7 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 
 ## Playable now
 
-- Create a named team and invite friends using a code. Two to four members join an expedition; up to twelve can belong to a team.
+- Create a named team and invite friends using a code. Two members play each mission; up to six belong to the team and share one world. Any member can choose a partner.
 - **Restore the Greenhouse:** choose responsibilities, plan with strategy signals, ping the map, share energy or hand off a task, then execute routes together.
 - Pressure plate A automatically opens gate A while occupied. Leaving closes it; no charges, activation button or holding cost. Matching A badges and a connecting wire show the relationship. The pump is behind the gate with no lower bypass. Start with 3 energy; gain 3 per new round, capped at 6.
 - Deliver every required component and bring every robot home within eight rounds to permanently restore the greenhouse. Successful completion and restoration are saved together.
@@ -47,7 +47,7 @@ npm run dev
 
 Open its printed URL. For a two-player test on one laptop, use `http://127.0.0.1:5173` for the host and `http://localhost:5173` for a teammate. They have separate browser storage but use the same local database. Alternatively, use separate browser profiles. Two tabs at the same origin share one membership.
 
-Create a team, share its code, join from the second identity, then have the host select both members and open the briefing. Claim different components and click ready on both screens. Agree who will hold plate A while the other player retrieves the pump and returns through gate A. The holder queues no moves; once the carrier is clear, both can head home.
+Create a team, share its code, join from the second identity, then have either player choose the other as their partner and open the briefing. Claim different components and click ready on both screens. Agree who will hold plate A while the other player retrieves the pump and returns through gate A. The holder queues no moves; once the carrier is clear, both can head home.
 
 Existing teams can start a new expedition after the rules upgrade. Previous restored regions remain saved. Historical chat remains available to players who opt in. The signals update preserves existing pressure-plate missions.
 

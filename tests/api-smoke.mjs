@@ -200,9 +200,44 @@ assert.deepEqual((await read()).pings, []);
 await action(0, "retreat");
 assert.deepEqual((await read(1)).restored, ["greenhouse"]);
 assert.deepEqual((await read(1)).contributions, done.contributions);
+// Six-member community, with a new pair that excludes the team creator.
+const extras = [];
+for (let i = 0; i < 4; i++) {
+  const joined = await request(null, {
+    type: "join",
+    alias: `QA Pair ${i + 1}`,
+    code: first.data.team.code,
+  });
+  assert.equal(joined.status, 200);
+  extras.push(joined.data);
+}
+const seventh = await request(null, {
+  type: "join",
+  alias: "QA Overflow",
+  code: first.data.team.code,
+});
+assert.equal(seventh.status, 400);
+assert.equal((await read()).members.length, 6);
+const pairView = (await request(extras[0].token)).data;
+const pairStart = await request(
+  extras[0].token,
+  body(pairView, "new-mission", {
+    roster: [extras[0].team.me, extras[1].team.me],
+  }),
+);
+assert.equal(pairStart.status, 200);
+assert.equal(pairStart.data.attempt.roster.length, 2);
+const observerEnd = await request(tokens[0], body(await read(), "retreat"));
+assert.equal(observerEnd.status, 400);
+const partnerView = (await request(extras[1].token)).data;
+const partnerEnd = await request(extras[1].token, body(partnerView, "retreat"));
+assert.equal(partnerEnd.status, 200);
+assert.equal(partnerEnd.data.attempt.phase, "ended");
+assert.deepEqual(partnerEnd.data.contributions, done.contributions);
+assert.deepEqual(partnerEnd.data.restored, ["greenhouse"]);
 assert.equal((await fetch(base + "/api/scenarios")).status, 404);
 console.log(
-  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, retired task-transfer rejection, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world and contributor names, retry preservation and removal of the Practice endpoint.",
+  "PASS: six-member limit, any-pair launch, participant exit and observer protection; two active identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, retired task-transfer rejection, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world and contributor names, retry preservation and removal of the Practice endpoint.",
 );
 
 if (process.env.QA_TEAM_REPORT) {

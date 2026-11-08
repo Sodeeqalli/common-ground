@@ -32,7 +32,12 @@ function fixture(n = 2) {
   const t = newTeam("t", "CODE", "Test", "p0", "Fern");
   for (let i = 1; i < n; i++)
     t.members.push({ id: "p" + i, name: "Player " + i, color: "#397a60" });
-  action(t, "p0", "new-mission", { roster: t.members.map((m) => m.id) });
+  if (n === 2) action(t, "p0", "new-mission", { roster: ["p0", "p1"] });
+  else
+    t.attempt = makeAttempt(
+      "legacy",
+      t.members.map((m) => m.id),
+    );
   t.members.forEach((m, i) =>
     action(t, m.id, "claim", { objective: t.attempt.objectives[i].id }),
   );
@@ -356,7 +361,7 @@ test("pings replace one per player, throttle changes, and expire with signals ea
   assert.deepEqual(t.signalSentAt, {});
 });
 for (const count of [2, 3, 4])
-  test(`${count} players can win in eight rounds by holding the pressure plate`, () => {
+  test(`${count} players (legacy for 3–4) can finish saved missions by holding the pressure plate`, () => {
     const t = fixture(count);
     for (let round = 1; round <= 8; round++) {
       const a = t.attempt;
@@ -373,7 +378,7 @@ for (const count of [2, 3, 4])
     assert.deepEqual(t.contributions.greenhouse, t.members);
     const credits = structuredClone(t.contributions);
     const saved = t.restoredAt;
-    action(t, "p0", "new-mission", { roster: t.members.map((m) => m.id) });
+    action(t, "p0", "new-mission", { roster: ["p0", "p1"] });
     action(t, "p0", "retreat");
     assert.deepEqual(t.restored, ["greenhouse"]);
     assert.equal(t.restoredAt, saved);
@@ -442,7 +447,7 @@ test("stale migration banners clear without changing current missions or world c
   assert.deepEqual(t.contributions, credits);
   assert.deepEqual(t.restored, ["greenhouse"]);
 });
-test("invalid moves, stale attempts and non-host launch are rejected", () => {
+test("invalid moves, stale attempts and replacing an active mission are rejected", () => {
   const t = fixture();
   assert.throws(() => action(t, "p1", "new-mission", { roster: ["p0", "p1"] }));
   assert.throws(() =>
@@ -610,4 +615,37 @@ test("legacy attribution only backfills retained successes and leaves unknown co
   action(unknown, "p0", "retreat");
   assert.deepEqual(unknown.contributions, {});
   assert.deepEqual(unknown.restored, ["greenhouse"]);
+});
+
+test("any pair can start; either participant can end; observers cannot interrupt", () => {
+  const t = newTeam("pairs", "CODE", "Team", "p0", "Owner");
+  for (let i = 1; i < 6; i++)
+    t.members.push({ id: `p${i}`, name: `Player ${i}`, color: "#397a60" });
+  for (const roster of [
+    ["p1"],
+    ["p1", "p1"],
+    ["p0", "p2"],
+    ["p1", "outsider"],
+    ["p1", "p2", "p3"],
+  ]) {
+    assert.throws(() => action(t, "p1", "new-mission", { roster }));
+  }
+  action(t, "p1", "new-mission", { roster: ["p1", "p2"] });
+  assert.deepEqual(t.attempt.roster, ["p1", "p2"]);
+  t.restored = ["greenhouse"];
+  t.contributions = { greenhouse: [t.members[0]] };
+  const credits = structuredClone(t.contributions);
+  const id = t.attempt.id;
+  assert.throws(() => action(t, "p0", "retreat"));
+  assert.throws(() => action(t, "p3", "new-mission", { roster: ["p3", "p4"] }));
+  action(t, "p2", "retreat");
+  assert.equal(t.attempt.phase, "ended");
+  assert.deepEqual(t.restored, ["greenhouse"]);
+  assert.deepEqual(t.contributions, credits);
+  action(t, "p2", "new-mission", { roster: ["p2", "p3"] });
+  assert.notEqual(t.attempt.id, id);
+  assert.deepEqual(t.attempt.roster, ["p2", "p3"]);
+  assert.equal(t.attempt.round, 1);
+  action(t, "p2", "retreat");
+  assert.equal(t.attempt.phase, "ended");
 });

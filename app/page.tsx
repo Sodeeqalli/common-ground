@@ -302,7 +302,7 @@ export default function CommonGround() {
       setAuth("create");
       return;
     }
-    setSelected(team.members.slice(0, 4).map((m) => m.id));
+    setSelected([team.me]);
     setLaunch(true);
   }
   function add(dir: Direction) {
@@ -520,7 +520,7 @@ export default function CommonGround() {
                       Greenhouse{" "}
                       {restored && <Check size={16} aria-label="Complete" />}
                     </h2>
-                    <small>2–4 players · 8 rounds</small>
+                    <small>2 players · 8 rounds</small>
                   </div>
                   <Button
                     onClick={() =>
@@ -678,46 +678,33 @@ export default function CommonGround() {
             >
               <X size={20} />
             </button>
-            <h2>
-              {team.owner === team.me ? "Choose players" : "Waiting for host"}
-            </h2>
-            {team.owner === team.me && <p>2–4 players</p>}
-            {team.members.map((m) => (
-              <label className="roster-choice" key={m.id}>
-                {team.owner === team.me && (
+            <h2>Choose a partner</h2>
+            {team.members
+              .filter((m) => m.id !== team.me)
+              .map((m) => (
+                <label className="roster-choice" key={m.id}>
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="mission-partner"
+                    aria-label={m.name}
                     checked={selected.includes(m.id)}
-                    disabled={m.id === team.me}
-                    onChange={(e) =>
-                      setSelected((ids) =>
-                        e.target.checked
-                          ? [...ids, m.id]
-                          : ids.filter((id) => id !== m.id),
-                      )
-                    }
+                    onChange={() => setSelected([team.me, m.id])}
                   />
-                )}
-                <RobotArt small color={m.color} />
-                <span>
-                  {m.name}
-                  {m.id === team.me ? " · you" : ""}
-                </span>
-              </label>
-            ))}
+                  <RobotArt small color={m.color} />
+                  <span>{m.name}</span>
+                </label>
+              ))}
             {team.members.length < 2 && (
               <div className="soft-note">
                 Invite a teammate: <strong>{team.code}</strong>
               </div>
             )}
-            {team.owner === team.me && (
-              <Button
-                disabled={busy || selected.length < 2 || selected.length > 4}
-                onClick={() => act("new-mission", { roster: selected })}
-              >
-                Start mission <ArrowRight size={16} />
-              </Button>
-            )}
+            <Button
+              disabled={busy || selected.length !== 2}
+              onClick={() => act("new-mission", { roster: selected })}
+            >
+              Start mission <ArrowRight size={16} />
+            </Button>
           </section>
         </div>
       )}
