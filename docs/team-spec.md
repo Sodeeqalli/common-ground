@@ -1,10 +1,10 @@
 # Common Ground — Team specification
 
-Version 3 · 8 November 2026 · Browser game · Adults only
+Version 4 · 8 November 2026 · Browser game · Adults only
 
 ## Product and scope
 
-A calm cooperative robot strategy game for autistic adults and invited adult friends. Teams restore a persistent shared world by completing missions together. Communication is useful to the mission: coordinate a relay, request energy, offer responsibility, mark a route and agree on timing.
+A calm cooperative robot strategy game for autistic adults and invited adult friends. Teams restore a persistent shared world by completing missions together. Communication is useful to the mission: hold a pressure plate, request energy, offer responsibility, mark a route and agree on timing.
 
 There are no mandatory scenario questions, dialogue-score rewards or AI judgments in Team Missions. Eight original adult conversations remain in optional Practice. The mission is allowed to be difficult and teams can lose. No one needs to type, speak or use a prescribed sentence to receive movement energy.
 
@@ -34,18 +34,16 @@ All routes and the map remain visible. Robots can occupy the same tile. No hidde
 
 ## Why actual teamwork is required
 
-The relay is at column 6, row 8. The gate is at column 4, row 8. The pump is at column 3, row 6.
+Pressure plate **A** is at column 6, row 8. Matching gate **A** is at column 4, row 8. The pump is at column 3, row 6. Both map tiles show an A badge, a connecting wire, and explicit open/closed state.
 
-1. The team has exactly **two relay charges** for an attempt.
-2. A robot must already be standing on the relay at the start of coordination to commit to powering it.
-3. The operator needs at least one energy. When routes resolve, operating consumes one energy and one shared charge.
-4. The operator must submit an empty route and remain on the relay for that entire round.
-5. Power opens the gate and releases the pump interlock for that round only. It is available throughout resolution, independent of player ordering.
-6. A **different robot** must reach the pump while powered, or already be waiting on the pump tile. Ownership still determines who collects it.
-7. Arriving at the relay during movement does not power it immediately. Commit during the next coordination phase.
-8. The gate closes for the next round unless someone commits another charge. A carried pump stays collected; returning it does not need continuous power.
+1. Any robot standing on plate A automatically opens gate A. No activation button, charges, or holding energy cost.
+2. Leaving the plate closes the gate unless another robot is still on it. Holding continues across round boundaries.
+3. Robots resolve one queued move each per movement step. Plate arrivals and departures resolve before gate entries on the same step, independent of roster order.
+4. A player can stay with an empty route, move off freely, or hand over the plate to a teammate. No operator role is locked.
+5. A robot already on the gate tile may exit after closure; closure never crushes or teleports it. Entering a closed gate has the normal blocked-move penalty.
+6. The pump requires its assigned collector, with no separate electronic lock. The lower-left bypass is closed at column 2, row 9, so getting into and out of the pump area requires the gate.
+7. Coordinate before leaving: “Are you through?” has a real consequence. Everyone still needs to return home within eight rounds.
 
-The outer path remains available. A team can conserve a return-gate charge by taking the longer route. Wasting both charges before collection makes the pump unavailable for the rest of the attempt. The host may end a stranded attempt, or the team can reach the eight-round limit and retry.
 
 ## Energy and movement
 
@@ -53,18 +51,18 @@ The outer path remains available. A team can conserve a return-gate charge by ta
 - Each new round adds three energy, capped at six. Readiness acknowledgements cannot repeat this reward.
 - Each directional attempt costs one energy. Unspent energy carries over.
 - During coordination a player can give one energy to one teammate once per round, respecting the six-energy cap. Transfers conserve energy.
-- If an operator gives away their last energy, their relay commitment is cancelled and everyone must review readiness again.
+- A robot can hold the plate even at zero energy. Energy transfers never deactivate it.
 - Each battery tile grants each robot one energy once per attempt, after movement. It cannot fund extra moves in that same submitted queue.
 - A wall or closed-gate attempt costs one energy, rolls the robot back one previously traversed step, and cancels the remaining queue. Rollback does not collect items, recharge or deliver cargo.
-- The preview uses the same planned relay state as execution. The operator cannot queue movement while committed.
+- The preview uses the same movement engine with teammates assumed stationary, and says so explicitly. A teammate moving on or off the plate can change the outcome. The preview includes the current player’s own effect on the plate.
 
 ## Round loop
 
 **Briefing → Coordination → Route planning → Resolution/review → Next coordination**
 
-Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players chat, ping, transfer energy, negotiate task handoffs and commit the relay. All ready before route planning. Changes to assignments, energy or relay commitments reset readiness.
+Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players chat, ping, transfer energy, negotiate task handoffs and decide who will hold the plate. All ready before route planning. Changes to assignments, energy or positions reset readiness.
 
-Players then queue routes or choose to stay. Routes execute after everyone locks in. The server validates energy, roles, ownership and the relay commitment. Resolution shows a factual event log. No one is scored for message length, tone, friendliness or number of messages.
+Players then queue routes or choose to stay. Routes execute after everyone locks in. The server validates energy, roles, ownership and per-step plate occupancy. Resolution shows a factual event log. No one is scored for message length, tone, friendliness or number of messages.
 
 All players explicitly continue to the next round. Anyone can request a break at the next boundary; at a paused boundary everyone must resume before continuing. Round limits constrain strategy, not response speed: there is no real-time countdown.
 
@@ -106,22 +104,22 @@ Autistic adults have different preferences. The game is intended for adults who 
 
 React/TypeScript with the supplied Vinext/Cloudflare Worker starter. D1 stores team state and hashed guest tokens. The client polls every 1.5 seconds. Server-owned validation, optimistic versions and request identifiers protect mutations.
 
-Chat and safe phase-local actions can revalidate after a competing write. Readiness only carries over if jobs, energy and relay commitments are unchanged. Shared decisions that no longer match the viewed state ask the player to review and retry. Successful restoration is part of the same state update as mission success.
+Chat and safe phase-local actions can revalidate after a competing write. Readiness only carries over if jobs, energy and positions are unchanged. Shared decisions that no longer match the viewed state ask the player to review and retry. Successful restoration is part of the same state update as mission success.
 
-Older active attempts are ended with an explicit upgrade notice because their quiz/key rules cannot safely resume under the relay rules. Team identity, chat and restored regions remain. No destructive schema migration is needed.
+Older active attempts are ended with an explicit upgrade notice because their previous map and relay rules cannot safely resume under the pressure-plate rules. Team identity, chat and restored regions remain. No destructive schema migration is needed.
 
 ## Acceptance and demonstration
 
 - Two browsers can exchange free text and see persistent energy requests, fulfilment confirmations, accepted/declined task offers and labelled map pings.
 - Completing or skipping optional Practice never changes the mission’s state.
-- A single robot cannot both operate the relay and collect the pump.
-- The operator cannot move; gate preview and execution agree; charges cannot be duplicated.
+- A single robot cannot leave the plate and cross the closed gate alone.
+- Plate occupancy updates on each step, including arrival, departure and handoff; roster order does not affect gate access.
 - Coordinated 2/3/4-player teams can complete the required deliveries within eight rounds.
-- Wasted charges or insufficient progress can cause failure. Retrying preserves the world.
+- Insufficient progress can cause failure. Retrying preserves the world.
 - Reconnect restores accepted state; duplicate mutation IDs do not repeat transfers.
 - A genuine full match and saved restoration are demonstrable without fabricated completion checkpoints.
 
-For judging, show the live team channel, a persistent energy request, a map ping, and a relay commitment. Have the carrier cross and collect the pump while the operator stays. Explain that the resulting coordination is the practice opportunity; everyday communication improvement has not been established.
+For judging, show the live team channel, a persistent energy request, a map ping, and a pressure-plate opening. Have the carrier cross and collect the pump while their teammate stays on the plate, then show the gate close when the last holder leaves. Explain that the resulting coordination is the practice opportunity; everyday communication improvement has not been established.
 
 ## Research basis and claims
 

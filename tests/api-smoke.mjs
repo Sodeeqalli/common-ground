@@ -4,7 +4,8 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const {
   readinessContext,
-  GENERATOR,
+  PRESSURE_PLATE,
+  gateKeys,
 } = require("../.test-build/shared/game.js");
 const base = process.env.TEST_URL || "http://127.0.0.1:5173";
 if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname))
@@ -70,12 +71,12 @@ async function together(type, args = [{}, {}]) {
 }
 assert.equal((await request("invalid")).status, 401);
 await together("message", [
-  { text: "I can run the relay." },
+  { text: "I can hold plate A." },
   { text: "I will collect the pump." },
 ]);
 const history = await read(1);
 assert.equal(history.messages.length, 2);
-assert(history.messages.some((m) => m.text === "I can run the relay."));
+assert(history.messages.some((m) => m.text === "I can hold plate A."));
 await action(0, "new-mission", { roster: ids });
 const snap = await read();
 const claimBody = body(snap, "claim", { objective: "pump" });
@@ -110,10 +111,10 @@ const duplicate = await request(
 assert.equal(duplicate.status, 400);
 // Return one energy so the route fixture starts with the ordinary 3/3 budget.
 await action(0, "give", { to: ids[1] });
-await action(0, "ping", { at: GENERATOR, kind: "meet" });
+await action(0, "ping", { at: PRESSURE_PLATE, kind: "meet" });
 const ping = (await read(1)).pings[0];
 assert.equal(ping.member, ids[0]);
-assert.deepEqual(ping.at, GENERATOR);
+assert.deepEqual(ping.at, PRESSURE_PLATE);
 await action(0, "swap-request", { objective: "pump", to: ids[1] });
 assert.equal((await read(1)).attempt.swap.from, ids[0]);
 await action(1, "swap-answer", { accept: false });
@@ -137,25 +138,23 @@ for (let round = 1; round <= 7; round++) {
   const state = await read();
   assert.equal(state.attempt.round, round);
   assert.equal(state.attempt.phase, "coordination");
-  if ([5, 6].includes(round)) await action(1, "power", { on: true });
   await together("coord-ready");
-  if (round === 5) {
-    const invalid = await request(
-      tokens[1],
-      body(await read(1), "moves", { moves: ["down"] }),
-    );
-    assert.equal(invalid.status, 400);
-  }
   await together(
     "moves",
     routes[round - 1].map((moves) => ({ moves })),
   );
+  const after = await read();
+  assert.equal(
+    gateKeys(after.attempt).length > 0,
+    [1, 4, 5, 6].includes(round),
+  );
+  assert.equal(after.attempt.powerCharges, undefined);
   if (round < 7) await together("next");
 }
 const done = await read(),
   other = await read(1);
 assert.equal(done.attempt.phase, "success");
-assert.equal(done.attempt.powerCharges, 0);
+assert.deepEqual(gateKeys(done.attempt), []);
 assert.deepEqual(done.restored, ["greenhouse"]);
 assert.equal(other.restoredAt, done.restoredAt);
 assert.equal(done.messages.length, 3);
@@ -176,5 +175,5 @@ const practice = await (
 assert(practice.node.choices.every((c) => !("credit" in c)));
 assert.deepEqual((await read()).restored, ["greenhouse"]);
 console.log(
-  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, relay constraint, seven-round strategic victory, saved world, retry preservation and eight independent practice scenarios.",
+  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, seven-round strategic victory, saved world, retry preservation and eight independent practice scenarios.",
 );

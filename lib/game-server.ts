@@ -4,9 +4,7 @@ import {
   execute,
   COLORS,
   FLOOR,
-  GENERATOR,
   same,
-  position,
   type Team,
   type Direction,
 } from "../shared/game";
@@ -67,12 +65,13 @@ export function normalizeTeam(team: Team): Team {
   team.energyRequests ??= [];
   team.pings ??= [];
   const a = team.attempt;
-  if (a && a.rulesVersion !== 2) {
+  if (a && a.rulesVersion !== 3) {
     team.upgradeNotice =
-      "Team missions now use shared planning instead of quizzes. Start a fresh expedition; your restored world is safe.";
+      "The gate now uses a pressure plate. Start a fresh expedition with the updated map; your restored world is safe.";
     if (!["success", "ended"].includes(a.phase)) a.phase = "ended";
-    a.powerCharges ??= 0;
-    a.powerBy ??= null;
+    a.rulesVersion = 3;
+    for (const key of ["powerCharges", "powerBy", "keys"])
+      delete (a as unknown as Record<string, unknown>)[key];
   }
   return team;
 }
@@ -227,27 +226,6 @@ export function applyAction(
     }
     return;
   }
-  if (type === "power") {
-    demand(a.phase === "coordination", "Agree on power before locking routes.");
-    if (action.on === false) {
-      demand(
-        a.powerBy === member,
-        "Only the operator can cancel their commitment.",
-      );
-      a.powerBy = null;
-    } else {
-      demand(
-        !a.powerBy &&
-          a.powerCharges > 0 &&
-          same(position(r), GENERATOR) &&
-          r.energy >= 1,
-        "Stand on the relay with at least one energy and a charge remaining.",
-      );
-      a.powerBy = member;
-    }
-    a.rosterReady = [];
-    return;
-  }
   if (type === "pause") {
     demand(!["success", "ended"].includes(a.phase), "The mission has ended.");
     a.pauseRequested = true;
@@ -329,7 +307,6 @@ export function applyAction(
         q.status = "fulfilled";
         q.fulfilledBy = member;
       }
-    if (a.powerBy === member && r.energy < 1) a.powerBy = null;
     a.rosterReady = [];
     return;
   }
@@ -388,10 +365,6 @@ export function applyAction(
         moves.every((d) => ["up", "down", "left", "right"].includes(d)),
       "Your route must fit your available energy.",
     );
-    demand(
-      a.powerBy !== member || moves.length === 0,
-      "The relay operator must stay for this round. Cancel during coordination to move instead.",
-    );
     r.queue = moves;
     r.ready = true;
     if (a.robots.every((r) => r.ready)) {
@@ -414,8 +387,6 @@ export function applyAction(
     a.rosterReady = [...new Set([...a.rosterReady, member])];
     if (a.rosterReady.length === a.roster.length) {
       a.round++;
-      a.powerBy = null;
-      a.keys = [];
       a.phase = "coordination";
       a.rosterReady = [];
       a.robots.forEach((r) => {

@@ -8,7 +8,7 @@ A cooperative browser game for autistic adults and invited adult friends, built 
 
 - Create a named team and invite friends using a code. Two to four members join an expedition; up to twelve can belong to a team.
 - **Restore the Greenhouse:** choose responsibilities, plan in team chat, ping the map, share energy or hand off a task, then execute routes together.
-- Two relay charges: a stationary teammate must power the gate and pump interlock while another robot retrieves the pump. The outer route can save a return charge. Start with 3 energy; gain 3 per new round, capped at 6.
+- Pressure plate A automatically opens gate A while occupied. Leaving closes it; no charges, activation button or holding cost. Matching A badges and a connecting wire show the relationship. The pump is behind the gate with no lower bypass. Start with 3 energy; gain 3 per new round, capped at 6.
 - Deliver every required component and bring every robot home within eight rounds to permanently restore the greenhouse. Successful completion and restoration are saved together.
 - Persistent energy requests have Give / Not now / Cancel controls. Task handoffs require recipient consent. Free text chat keeps the latest 60 messages. Map pings identify their sender and location.
 - Individual **Practice** holds all eight adult conversations and an open-gate movement sandbox. It never awards mission energy or changes team progress.
@@ -47,7 +47,7 @@ npm run dev
 
 Open its printed URL. For a two-player test on one laptop, use `http://127.0.0.1:5173` for the host and `http://localhost:5173` for a teammate. They have separate browser storage but use the same local database. Alternatively, use separate browser profiles. Two tabs at the same origin share one membership.
 
-Create a team, share its code, join from the second identity, then have the host select both members and open the briefing. Claim different components and click ready on both screens. Agree who will operate the relay and when; powering too early wastes a finite charge.
+Create a team, share its code, join from the second identity, then have the host select both members and open the briefing. Claim different components and click ready on both screens. Agree who will hold plate A while the other player retrieves the pump and returns through gate A. The holder queues no moves; once the carrier is clear, both can head home.
 
 Existing teams can start a new expedition after the rules upgrade. Previous restored regions and chat remain saved.
 
@@ -64,7 +64,7 @@ npm run test:api  # requires the local dev server and migrated local DB; run npm
 npm run build
 ```
 
-The rule suite covers all 72 optional dialogue paths, durable requests, chat/ping validation, consented handoffs, relay timing and charges, energy, collisions, pause/resume, old-state upgrades, real failure, and seven-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
+The rule suite covers all 72 optional dialogue paths, durable requests, chat/ping validation, consented handoffs, per-step plate arrivals/departures/handoffs, energy, collisions, pause/resume, old-state upgrades, real failure, and seven-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
 
 ## Architecture
 

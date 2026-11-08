@@ -35,6 +35,7 @@ import {
   BASE,
   position,
   preview,
+  gateKeys,
   same,
   makeAttempt,
   readinessContext,
@@ -338,12 +339,7 @@ export default function CommonGround() {
     setLaunch(true);
   }
   function add(dir: Direction) {
-    if (
-      robot &&
-      !robot.ready &&
-      a?.powerBy !== team?.me &&
-      queue.length < robot.energy
-    )
+    if (robot && !robot.ready && queue.length < robot.energy)
       setQueue((q) => [...q, dir]);
   }
   useEffect(() => {
@@ -623,8 +619,8 @@ export default function CommonGround() {
                   </div>
                   <h2>Bring the greenhouse back.</h2>
                   <p>
-                    Plan the relay, share responsibilities, and retrieve the
-                    missing components before eight rounds run out.
+                    Hold the pressure plate, share responsibilities, and
+                    retrieve the missing components before eight rounds run out.
                   </p>
                   <div className="pills">
                     <span>
@@ -988,14 +984,16 @@ export default function CommonGround() {
                 planning.
               </li>
               <li>
-                The relay has two charges. A robot already on it can spend 1
-                energy and stay still to power the gate for that round. A
-                different robot must collect the pump while it is powered.
+                Stand on pressure plate A to open gate A. Leaving closes it.
+                Holding the plate costs no energy. Robots move one queued step
+                together at a time; plate changes apply before gate crossings on
+                that step. Wait until your teammate is through before leaving.
                 Batteries give +1 once per robot, after movement.
               </li>
               <li>
                 A blocked move costs 1, rolls you back one step and cancels the
-                rest. The preview shows this.
+                rest. Preview assumes teammates stay in place; their moves can
+                change the gate.
               </li>
               <li>
                 Take up to eight rounds. There is no real-time countdown.
@@ -1050,7 +1048,7 @@ function Practice({ onError }: { onError: (s: string) => void }) {
       const a = makeAttempt("practice", ["you", "other"]);
       a.robots = a.robots.slice(0, 1);
       a.robots[0].energy = 6;
-      a.keys = ["green"];
+      a.sandbox = true;
       a.phase = "round-end";
       return a;
     }),
@@ -1237,7 +1235,7 @@ function Practice({ onError }: { onError: (s: string) => void }) {
                 <span key={i}>{directions.find((x) => x.dir === d)?.key}</span>
               ))}
             </div>
-            {preview(sandbox.robots[0], moves, sandbox.keys).collision && (
+            {preview(sandbox.robots[0], moves, gateKeys(sandbox)).collision && (
               <div className="warning">
                 This route hits a wall. The attempted step rolls you back and
                 ends the route.
@@ -1250,7 +1248,7 @@ function Practice({ onError }: { onError: (s: string) => void }) {
                 next.robots[0].queue = moves;
                 execute(next, true);
                 next.robots[0].energy = 6;
-                next.keys = ["green"];
+                next.sandbox = true;
                 setSandbox(next);
                 setMoves([]);
               }}

@@ -29,15 +29,13 @@ export type Phase =
   | "ended";
 export type Attempt = {
   id: string;
-  rulesVersion: 2;
+  rulesVersion: 3;
   phase: Phase;
   round: number;
   roster: string[];
   robots: Robot[];
   objectives: Objective[];
-  keys: string[];
-  powerCharges: number;
-  powerBy: string | null;
+  sandbox?: boolean;
   rosterReady: string[];
   pauseRequested: boolean;
   paused: boolean;
@@ -96,7 +94,7 @@ export const PLAYLIST = [
 ];
 export const COLORS = ["#38785f", "#b57543", "#667aa7", "#9d718e"];
 export const BASE = { x: 5, y: 9 };
-export const KEY = { x: 5, y: 7 };
+export const PRESSURE_PLATE = { x: 5, y: 7 };
 export const GATE = { x: 3, y: 7 };
 export const BATTERIES = [
   { x: 1, y: 7 },
@@ -130,7 +128,6 @@ export const FLOOR: Point[] = [
   [3, 9],
   [2, 9],
   [1, 9],
-  [1, 8],
   [1, 7],
   [1, 6],
   [1, 5],
@@ -151,12 +148,11 @@ export const COMPONENTS = [
 ];
 export const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y;
 export const position = (r: Robot) => r.history[r.history.length - 1];
-export const GENERATOR = KEY;
 export const MAX_ROUNDS = 8;
 export function makeAttempt(id: string, roster: string[]): Attempt {
   return {
     id,
-    rulesVersion: 2,
+    rulesVersion: 3,
     phase: "briefing",
     round: 1,
     roster,
@@ -177,9 +173,6 @@ export function makeAttempt(id: string, roster: string[]): Attempt {
       status: "waiting",
       carrier: null,
     })),
-    keys: [],
-    powerCharges: 2,
-    powerBy: null,
     rosterReady: [],
     pauseRequested: false,
     paused: false,
@@ -188,13 +181,24 @@ export function makeAttempt(id: string, roster: string[]): Attempt {
     log: [],
   };
 }
-// The route preview uses the same gate state that the upcoming resolution will use.
+// Gate A is controlled entirely by occupancy of pressure plate A.
+export function plateHolders(a: Attempt) {
+  return a.robots.filter((r) => same(position(r), PRESSURE_PLATE));
+}
 export function gateKeys(a: Attempt): string[] {
-  return ["coordination", "planning"].includes(a.phase)
-    ? a.powerBy
-      ? ["green"]
-      : []
-    : a.keys;
+  return a.sandbox || plateHolders(a).length ? ["green"] : [];
+}
+// Other players' routes are private. Show a conditional preview with them stationary.
+export function previewMission(a: Attempt, id: string, queue: Direction[]) {
+  const copy = structuredClone(a);
+  copy.robots.forEach((r) => {
+    r.queue = r.id === id ? queue : [];
+  });
+  const traces = execute(copy);
+  return {
+    ...traces[id],
+    end: position(copy.robots.find((r) => r.id === id)!),
+  };
 }
 export function step(p: Point, d: Direction): Point {
   return {
@@ -229,21 +233,15 @@ export function preview(robot: Robot, queue: Direction[], keys: string[]) {
 }
 export function execute(a: Attempt, sandbox = false) {
   a.log = [];
-  const operator = a.robots.find((r) => r.id === a.powerBy);
-  const powered =
-    !!operator &&
-    same(position(operator), GENERATOR) &&
-    operator.energy >= 1 &&
-    operator.queue.length === 0 &&
-    a.powerCharges > 0;
-  a.keys = powered || sandbox ? ["green"] : [];
-  if (powered) {
-    operator!.energy--;
-    a.powerCharges--;
-    a.log.push(
-      `${operator!.id}: Powered the gate and pump interlock for this round. ${a.powerCharges} charge(s) remain.`,
-    );
+  const traces: Record<string, { path: Point[]; collision: boolean }> = {};
+  const earned: Record<string, number> = {};
+  const stopped = new Set<string>();
+  for (const r of a.robots) {
+    traces[r.id] = { path: [], collision: false };
+    earned[r.id] = 0;
   }
+  const open = () => sandbox || !!a.sandbox || plateHolders(a).length > 0;
+  let wasOpen = open();
   const collect = (r: Robot) => {
     if (r.cargo) return;
     const obj = a.objectives.find(
@@ -251,50 +249,67 @@ export function execute(a: Attempt, sandbox = false) {
         o.status === "waiting" && o.owner === r.id && same(o.at, position(r)),
     );
     if (!obj) return;
-    if (obj.id === "pump" && (!powered || operator?.id === r.id)) {
-      a.log.push(
-        `${r.id}: Pump is locked. A different robot must power the relay during a collection round.`,
-      );
-      return;
-    }
     obj.status = "carried";
     obj.carrier = r.id;
     r.cargo = obj.id;
     a.log.push(`${r.id}: Collected ${obj.name}.`);
   };
-  for (const r of a.robots) {
-    let earned = 0;
-    collect(r); // A robot waiting at the pump can collect when a teammate powers it.
-    for (const dir of r.queue) {
-      if (r.energy < 1) break;
-      r.energy--;
-      const next = step(position(r), dir);
-      if (!legal(next, a.keys)) {
-        if (r.history.length > 1) r.history.pop();
-        a.log.push(
-          `${r.id}: Blocked move: one energy spent, one step rolled back, remaining route cancelled.`,
-        );
-        break;
-      }
-      r.history.push(next);
-      const battery = BATTERIES.find((b) => same(b, next));
-      if (battery) {
-        const key = `${battery.x},${battery.y}`;
-        if (!r.batteries.includes(key)) {
-          r.batteries.push(key);
-          earned++;
-        }
-      }
-      collect(r);
-      if (same(next, BASE) && r.cargo) {
-        const obj = a.objectives.find((o) => o.id === r.cargo)!;
-        obj.status = "delivered";
-        obj.carrier = null;
-        r.cargo = null;
-        a.log.push(`${r.id}: Delivered ${obj.name}.`);
+  const block = (r: Robot, beat: number) => {
+    if (r.history.length > 1) r.history.pop();
+    traces[r.id].collision = true;
+    stopped.add(r.id);
+    a.log.push(
+      `${r.id}: Step ${beat}: blocked move; one energy spent, one step rolled back, remaining route cancelled.`,
+    );
+  };
+  const move = (r: Robot, next: Point) => {
+    r.history.push(next);
+    traces[r.id].path.push(next);
+    const battery = BATTERIES.find((b) => same(b, next));
+    if (battery) {
+      const key = `${battery.x},${battery.y}`;
+      if (!r.batteries.includes(key)) {
+        r.batteries.push(key);
+        earned[r.id]++;
       }
     }
-    r.energy = Math.min(6, r.energy + earned);
+    collect(r);
+    if (same(next, BASE) && r.cargo) {
+      const obj = a.objectives.find((o) => o.id === r.cargo)!;
+      obj.status = "delivered";
+      obj.carrier = null;
+      r.cargo = null;
+      a.log.push(`${r.id}: Delivered ${obj.name}.`);
+    }
+  };
+  a.robots.forEach(collect);
+  // Resolve one queued step per robot per beat, independent of roster order.
+  // Plate arrivals/departures resolve before gate entries on the same beat.
+  const beats = Math.max(0, ...a.robots.map((r) => r.queue.length));
+  for (let i = 0; i < beats; i++) {
+    const gateEntries: { r: Robot; next: Point }[] = [];
+    for (const r of a.robots) {
+      if (stopped.has(r.id) || !r.queue[i] || r.energy < 1) continue;
+      r.energy--;
+      const next = step(position(r), r.queue[i]);
+      if (!FLOOR.some((f) => same(f, next))) block(r, i + 1);
+      else if (same(next, GATE)) gateEntries.push({ r, next });
+      else move(r, next);
+    }
+    const gateOpen = open();
+    for (const { r, next } of gateEntries) {
+      if (gateOpen) move(r, next);
+      else block(r, i + 1);
+    }
+    const nowOpen = open();
+    if (nowOpen !== wasOpen)
+      a.log.push(
+        `Step ${i + 1}: Gate A ${nowOpen ? "opened — plate A is occupied" : "closed — plate A is empty"}.`,
+      );
+    wasOpen = nowOpen;
+  }
+  for (const r of a.robots) {
+    r.energy = Math.min(6, r.energy + earned[r.id]);
     r.queue = [];
     r.ready = false;
   }
@@ -312,6 +327,7 @@ export function execute(a: Attempt, sandbox = false) {
   } else a.phase = "round-end";
   a.paused = a.pauseRequested;
   a.resumes = [];
+  return traces;
 }
 export function shortestPath(
   from: Point,
@@ -344,6 +360,6 @@ export function readinessContext(a: Attempt) {
         ? a.robots.map((r) => [r.id, r.energy, r.donated])
         : null,
     swap: a.swap,
-    power: [a.powerBy, a.powerCharges],
+    positions: a.robots.map((r) => [r.id, position(r)]),
   });
 }

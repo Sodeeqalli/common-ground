@@ -8,7 +8,6 @@ import {
   Pause,
   Zap,
   Undo2,
-  Radio,
   MapPin,
   Home,
   Sprout,
@@ -16,11 +15,11 @@ import {
 import { useState } from "react";
 import {
   BASE,
-  GENERATOR,
-  gateKeys,
+  PRESSURE_PLATE,
+  plateHolders,
   position,
   same,
-  preview,
+  previewMission,
   type Team,
   type Direction,
   type Point,
@@ -64,7 +63,7 @@ export default function MissionControl({
     null,
   );
   const ended = ["success", "ended"].includes(a.phase),
-    operator = a.robots.find((r) => r.id === a.powerBy);
+    holders = plateHolders(a);
   const pending = (team.energyRequests || []).some(
     (q) => q.attemptId === a.id && q.from === team.me && q.status === "pending",
   );
@@ -79,8 +78,7 @@ export default function MissionControl({
           <div className="eyebrow">TEAM MISSION 01 · SHARED STRATEGY</div>
           <h1>Restore the greenhouse</h1>
           <p>
-            Two relay charges. Eight rounds. Bring every component and robot
-            home.
+            Hold the plate. Open the gate. Bring every component and robot home.
           </p>
         </div>
         <button className="button outline compact" onClick={onRules}>
@@ -158,14 +156,18 @@ export default function MissionControl({
         <>
           <div className="mission-layout">
             <div className="board-column">
-              <div className="relay-status">
-                <Radio size={19} />
+              <div
+                className={`plate-status ${holders.length ? "is-open" : ""}`}
+              >
+                <span className="link-badge">A</span>
                 <div>
-                  <strong>{a.powerCharges} / 2 relay charges left</strong>
+                  <strong>
+                    Plate A → Gate A · {holders.length ? "OPEN" : "CLOSED"}
+                  </strong>
                   <p>
-                    {operator
-                      ? `${name(operator.id)} will stay at the relay this round.`
-                      : "The pump needs a different robot to power the relay during collection."}
+                    {holders.length
+                      ? `${holders.map((r) => name(r.id)).join(", ")} is holding the plate. Stay until your teammate is through.`
+                      : "Stand on plate A to open gate A. Leaving the plate closes the gate."}
                   </p>
                 </div>
               </div>
@@ -227,8 +229,8 @@ export default function MissionControl({
                         {robot.id === team.me ? " · you" : ""}
                       </strong>
                       <small>
-                        {robot.id === a.powerBy
-                          ? "Relay operator"
+                        {same(position(robot), PRESSURE_PLATE)
+                          ? "Holding plate A"
                           : robot.cargo
                             ? a.objectives.find((o) => o.id === robot.cargo)
                                 ?.name
@@ -254,7 +256,7 @@ export default function MissionControl({
                       <strong>{o.name}</strong>
                       <small>
                         {o.owner ? name(o.owner) : "Unclaimed"}
-                        {o.id === "pump" ? " · remote relay required" : ""}
+                        {o.id === "pump" ? " · behind gate A" : ""}
                       </small>
                     </span>
                     <em>
@@ -283,8 +285,9 @@ export default function MissionControl({
                       <div className="eyebrow">PLAN BEFORE YOU LEAVE</div>
                       <h2>Who’s collecting what?</h2>
                       <p>
-                        Claim one component each. Someone must also visit the
-                        relay and stay there while a teammate collects the pump.
+                        Claim one component each. Someone must stand on plate A
+                        while a teammate crosses gate A and brings the pump
+                        back.
                       </p>
                       <div className="job-list">
                         {a.objectives.map((o) => (
@@ -301,7 +304,7 @@ export default function MissionControl({
                                 {o.owner
                                   ? name(o.owner)
                                   : o.id === "pump"
-                                    ? "Requires a teammate at the relay"
+                                    ? "Behind gate A"
                                     : "Available to claim"}
                               </small>
                             </span>
@@ -321,10 +324,10 @@ export default function MissionControl({
                       <div className="soft-note">
                         <strong>What makes this a team mission?</strong>
                         <p>
-                          A relay operator spends 1 energy and stays still for a
-                          whole round. A different robot retrieves the pump. Two
-                          charges total; the outer path can save a charge on the
-                          way home.
+                          Stand on pressure plate A to open gate A. Hold it
+                          while your teammate collects the pump and comes back
+                          through. Leaving closes the gate. No charges or
+                          activation button.
                         </p>
                       </div>
                       <button
@@ -354,44 +357,24 @@ export default function MissionControl({
                       <h2>Agree on the next move.</h2>
                       <p>
                         You have <strong>{r.energy} energy</strong>. Check the
-                        map, share what you need, and choose whether to power
-                        the relay.
+                        map, share what you need, and agree who will hold the
+                        pressure plate.
                       </p>
-                      <div className="relay-control">
-                        <Radio size={24} />
+                      <div className="plate-control">
+                        <span className="link-badge">A</span>
                         <strong>
-                          {a.powerBy
-                            ? `${name(a.powerBy)} is committed to the relay`
-                            : "Relay not scheduled"}
+                          {holders.length
+                            ? "Gate A is open"
+                            : "Gate A is closed"}
                         </strong>
                         <p>
-                          {same(position(r), GENERATOR)
-                            ? "Powering uses 1 energy and 1 shared charge. You stay on this tile for the entire movement round."
-                            : "Move to the relay tile (column 6, row 8) first. You can power it from the next planning phase."}
+                          {same(position(r), PRESSURE_PLATE)
+                            ? "You are standing on plate A. Queue no moves to keep the gate open. Leave only when your teammate is clear."
+                            : "Plate A is at column 6, row 8. Gate A is at column 4, row 8. Anyone standing on the plate holds the gate open."}
                         </p>
-                        {a.powerBy === team.me ? (
-                          <button
-                            className="button outline"
-                            disabled={busy}
-                            onClick={() => act("power", { on: false })}
-                          >
-                            Cancel my relay commitment
-                          </button>
-                        ) : (
-                          <button
-                            className="button primary"
-                            disabled={
-                              busy ||
-                              !!a.powerBy ||
-                              !same(position(r), GENERATOR) ||
-                              r.energy < 1 ||
-                              a.powerCharges < 1
-                            }
-                            onClick={() => act("power", { on: true })}
-                          >
-                            Power relay this round · 1 charge
-                          </button>
-                        )}
+                        <small>
+                          Holding costs no energy. No button to activate.
+                        </small>
                       </div>
                       <div className="give-list">
                         {a.robots
@@ -466,7 +449,7 @@ export default function MissionControl({
                       </button>
                       <p className="tiny">
                         {a.rosterReady.length}/{a.roster.length} ready. Changed
-                        energy, jobs or relay commitments reset readiness.
+                        energy or jobs reset readiness.
                       </p>
                     </>
                   )}
@@ -474,14 +457,18 @@ export default function MissionControl({
                     <>
                       <div className="eyebrow">CHOOSE YOUR ROUTE</div>
                       <h2>
-                        {a.powerBy === team.me
-                          ? "Hold the relay."
+                        {same(position(r), PRESSURE_PLATE)
+                          ? "Hold the plate or move on?"
                           : "Make each step count."}
                       </h2>
                       <p>
-                        {a.powerBy === team.me
-                          ? "You committed to power this round. Lock a stationary route; your teammate can cross the gate and collect the pump."
-                          : `Queue up to ${r.energy} moves. The gate is ${a.powerBy ? "powered for this round" : "closed; the outer path is available"}.`}
+                        Queue up to {r.energy} moves. Gate A is currently{" "}
+                        {holders.length ? "open" : "closed"}.
+                      </p>
+                      <p className="soft-note">
+                        Preview assumes teammates stay put. Everyone moves one
+                        step at a time; arriving on plate A opens the gate,
+                        leaving closes it on that same step.
                       </p>
                       <div className="energy-display">
                         <span>AVAILABLE ENERGY</span>
@@ -497,10 +484,7 @@ export default function MissionControl({
                             className={`dir-${dir}`}
                             aria-label={`Queue ${dir}`}
                             disabled={
-                              busy ||
-                              r.ready ||
-                              a.powerBy === team.me ||
-                              queue.length >= r.energy
+                              busy || r.ready || queue.length >= r.energy
                             }
                             onClick={() => setQueue((q) => [...q, dir])}
                           >
@@ -522,8 +506,8 @@ export default function MissionControl({
                           ))
                         ) : (
                           <p>
-                            {a.powerBy === team.me
-                              ? "Stay and power the relay."
+                            {same(position(r), PRESSURE_PLATE)
+                              ? "Stay on plate A to hold gate A open."
                               : "No moves queued. Unspent energy carries over."}
                           </p>
                         )}
@@ -544,7 +528,7 @@ export default function MissionControl({
                           Clear
                         </button>
                       </div>
-                      {preview(r, queue, gateKeys(a)).collision && (
+                      {previewMission(a, r.id, queue).collision && (
                         <div className="warning">
                           Blocked route: costs 1 energy, rolls back one step and
                           cancels the remaining moves.
@@ -557,10 +541,10 @@ export default function MissionControl({
                       >
                         {r.ready
                           ? "Route locked · waiting…"
-                          : a.powerBy === team.me
-                            ? "Lock in: stay and power"
-                            : queue.length
-                              ? "Lock in my route"
+                          : queue.length
+                            ? "Lock in my route"
+                            : same(position(r), PRESSURE_PLATE)
+                              ? "Stay here & hold gate A"
                               : "Stay here & save energy"}
                       </button>
                       <p className="tiny">

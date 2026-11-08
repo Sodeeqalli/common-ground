@@ -247,7 +247,7 @@ export default function TeamChannel({ team, busy, quiet, onAction }: Props) {
               onChange={(e) => setDraft(e.target.value)}
               maxLength={280}
               rows={2}
-              placeholder="e.g. Wait to power the gate—I’m one round away."
+              placeholder="e.g. Please hold plate A until I’m back through."
             />
             <div>
               <small>{draft.length}/280 · No message score</small>

@@ -5,8 +5,10 @@ const {
   execute,
   position,
   preview,
+  previewMission,
+  shortestPath,
   BASE,
-  GENERATOR,
+  PRESSURE_PLATE,
   GATE,
   readinessContext,
   gateKeys,
@@ -102,72 +104,112 @@ test("missions start with energy and go directly to coordination; answers cannot
   assert.throws(() => action(t, "p0", "answer", { choice: "AE-01-D1-C1" }));
   assert.equal(publicView(t, "p0").scenario, undefined);
 });
-test("pump cannot be collected without a different robot powering the relay", () => {
+test("standing opens gate A for free across rounds; leaving closes it", () => {
   const t = fixture(),
-    a = t.attempt;
-  a.robots[0].history = [{ x: 2, y: 5 }];
-  execute(a);
-  assert.equal(a.objectives[0].status, "waiting");
-  a.phase = "coordination";
-  a.robots[1].history = [GENERATOR];
-  action(t, "p1", "power", { on: true });
+    a = t.attempt,
+    holder = a.robots[1];
+  holder.history = [PRESSURE_PLATE];
+  holder.energy = 0;
   assert.deepEqual(gateKeys(a), ["green"]);
   execute(a);
-  assert.equal(a.objectives[0].status, "carried");
-  assert.equal(a.powerCharges, 1);
-  assert.equal(a.robots[1].energy, 2);
-});
-test("relay commitment prevents movement; only two charges, and gate closes next round", () => {
-  const t = fixture(),
-    a = t.attempt;
-  a.robots[1].history = [GENERATOR];
-  for (let i = 0; i < 2; i++) {
-    a.phase = "coordination";
-    a.powerBy = null;
-    action(t, "p1", "power", { on: true });
-    for (const m of t.members) action(t, m.id, "coord-ready");
-    assert.throws(() => action(t, "p1", "moves", { moves: ["down"] }));
-    action(t, "p0", "moves", { moves: [] });
-    action(t, "p1", "moves", { moves: [] });
-    for (const m of t.members) action(t, m.id, "next");
-    assert.deepEqual(a.keys, []);
-    assert.equal(a.powerBy, null);
-  }
-  assert.equal(a.powerCharges, 0);
+  assert.equal(holder.energy, 0);
+  assert.deepEqual(gateKeys(a), ["green"]);
+  for (const m of t.members) action(t, m.id, "next");
+  assert.deepEqual(gateKeys(a), ["green"]);
+  for (const m of t.members) action(t, m.id, "coord-ready");
+  action(t, "p0", "moves", { moves: [] });
+  action(t, "p1", "moves", { moves: ["down"] });
+  assert.deepEqual(gateKeys(a), []);
+  assert.equal(holder.energy, 2);
+  assert.equal(a.powerCharges, undefined);
   assert.throws(() => action(t, "p1", "power", { on: true }));
 });
-test("collision previews agree with resolution for the planned gate state", () => {
-  const a = makeAttempt("a", ["p0", "p1"]);
-  a.phase = "planning";
-  a.robots[0].history = [GENERATOR, { x: 4, y: 7 }];
-  a.robots[0].energy = 3;
-  a.robots[0].queue = ["left", "left"];
-  let p = preview(a.robots[0], a.robots[0].queue, gateKeys(a));
-  assert(p.collision);
-  execute(a);
-  assert.deepEqual(position(a.robots[0]), p.end);
-  assert.equal(a.robots[0].energy, 2);
-  a.phase = "planning";
-  a.powerBy = "p1";
-  a.robots[1].history = [GENERATOR];
+test("plate arrivals and departures affect same-step crossings regardless of roster order", () => {
+  for (const reverse of [false, true])
+    for (const arriving of [false, true]) {
+      const a = makeAttempt("a", ["carrier", "holder"]),
+        [carrier, holder] = a.robots;
+      carrier.history = [{ x: 4, y: 7 }];
+      carrier.queue = ["left"];
+      holder.history = [arriving ? { x: 5, y: 8 } : PRESSURE_PLATE];
+      holder.queue = [arriving ? "up" : "down"];
+      if (reverse) a.robots.reverse();
+      execute(a);
+      assert.deepEqual(position(carrier), arriving ? GATE : { x: 4, y: 7 });
+      assert.equal(gateKeys(a).length > 0, arriving);
+    }
+});
+test("leaving the plate midway through a route closes the gate before a later crossing", () => {
+  const a = makeAttempt("a", ["p0", "p1"]),
+    [carrier, holder] = a.robots;
+  carrier.history = [{ x: 2, y: 6 }];
+  carrier.queue = ["down", "right"];
+  holder.history = [PRESSURE_PLATE];
+  holder.queue = ["down"];
+  const traces = execute(a);
+  assert(traces.p0.collision);
+  assert.deepEqual(position(carrier), { x: 2, y: 6 });
+  assert.equal(gateKeys(a).length, 0);
+});
+test("plate handoff keeps the gate open; one remaining holder is enough", () => {
+  const a = makeAttempt("a", ["p0", "p1", "p2"]);
   a.robots[0].history = [{ x: 4, y: 7 }];
+  a.robots[0].queue = ["left"];
+  a.robots[1].history = [PRESSURE_PLATE];
+  a.robots[1].queue = ["down"];
+  a.robots[2].history = [{ x: 5, y: 6 }];
+  a.robots[2].queue = ["down"];
+  execute(a);
+  assert.deepEqual(position(a.robots[0]), GATE);
+  assert.deepEqual(gateKeys(a), ["green"]);
+});
+test("gate closure does not trap or crush a robot already on its tile", () => {
+  const a = makeAttempt("a", ["p0", "p1"]);
+  a.robots[0].history = [GATE];
+  a.robots[0].queue = ["right"];
+  a.robots[1].history = [PRESSURE_PLATE];
+  a.robots[1].queue = ["down"];
+  execute(a);
+  assert.deepEqual(position(a.robots[0]), { x: 4, y: 7 });
+  assert.deepEqual(gateKeys(a), []);
+});
+test("pump is behind gate A with no bypass or separate activation requirement", () => {
+  const a = makeAttempt("a", ["p0", "p1"]);
+  assert.equal(shortestPath(BASE, a.objectives[0].at, []), null);
+  assert(shortestPath(BASE, a.objectives[0].at, ["green"]));
+  a.objectives[0].owner = "p0";
+  a.robots[0].history = [a.objectives[0].at];
+  execute(a);
+  assert.equal(a.objectives[0].status, "carried");
+});
+test("conditional preview models the player's own plate departure and matches stationary teammates", () => {
+  const a = makeAttempt("a", ["p0", "p1"]);
+  a.robots[0].history = [PRESSURE_PLATE];
   a.robots[0].queue = ["left", "left"];
-  p = preview(a.robots[0], a.robots[0].queue, gateKeys(a));
-  assert(!p.collision);
+  const p = previewMission(a, "p0", a.robots[0].queue);
+  assert(p.collision); // Cannot open the gate and then run through it alone.
   execute(a);
   assert.deepEqual(position(a.robots[0]), p.end);
+  const b = makeAttempt("b", ["p0", "p1"]);
+  b.robots[0].history = [{ x: 4, y: 7 }];
+  b.robots[0].queue = ["left", "left"];
+  b.robots[1].history = [PRESSURE_PLATE];
+  const q = previewMission(b, "p0", b.robots[0].queue);
+  assert(!q.collision);
+  execute(b);
+  assert.deepEqual(position(b.robots[0]), q.end);
 });
 test("batteries award once per robot and only after execution", () => {
   const a = makeAttempt("a", ["p0", "p1"]),
     r = a.robots[0];
-  r.history = [{ x: 1, y: 8 }];
+  r.history = [{ x: 1, y: 6 }];
   r.energy = 1;
-  r.queue = ["up", "up"];
+  r.queue = ["down", "down"];
   execute(a);
   assert.deepEqual(position(r), { x: 1, y: 7 });
   assert.equal(r.energy, 1);
   r.energy = 3;
-  r.queue = ["down", "up"];
+  r.queue = ["up", "down"];
   execute(a);
   assert.equal(r.energy, 1);
 });
@@ -223,9 +265,9 @@ test("task offers require recipient consent and reset shared readiness", () => {
 });
 test("map pings identify sender, round and tile; invalid tiles and kinds are rejected", () => {
   const t = fixture();
-  action(t, "p0", "ping", { at: GENERATOR, kind: "meet" });
+  action(t, "p0", "ping", { at: PRESSURE_PLATE, kind: "meet" });
   const ping = publicView(t, "p1").pings[0];
-  assert.deepEqual(ping.at, GENERATOR);
+  assert.deepEqual(ping.at, PRESSURE_PLATE);
   assert.equal(ping.member, "p0");
   assert.equal(ping.round, 1);
   assert.throws(() =>
@@ -242,20 +284,19 @@ test("chat is bounded, preserves literal text, and works before a mission", () =
   assert.throws(() => action(t, "outsider", "message", { text: "No access" }));
 });
 for (const count of [2, 3, 4])
-  test(`${count} players can win in seven rounds by coordinating two relay activations`, () => {
+  test(`${count} players can win in seven rounds by holding the pressure plate`, () => {
     const t = fixture(count);
     for (let round = 1; round <= 7; round++) {
       const a = t.attempt;
       assert.equal(a.phase, "coordination");
       assert.equal(a.round, round);
-      if ([5, 6].includes(round)) action(t, "p1", "power", { on: true });
       for (const m of t.members) action(t, m.id, "coord-ready");
       for (let i = 0; i < count; i++)
         action(t, "p" + i, "moves", { moves: ROUTES[round - 1][i] });
       if (round < 7) for (const m of t.members) action(t, m.id, "next");
     }
     assert.equal(t.attempt.phase, "success");
-    assert.equal(t.attempt.powerCharges, 0);
+    assert.deepEqual(gateKeys(t.attempt), []);
     assert.deepEqual(t.restored, ["greenhouse"]);
     const saved = t.restoredAt;
     action(t, "p0", "new-mission", { roster: t.members.map((m) => m.id) });
@@ -263,18 +304,17 @@ for (const count of [2, 3, 4])
     assert.deepEqual(t.restored, ["greenhouse"]);
     assert.equal(t.restoredAt, saved);
   });
-test("wasting both relay charges before pump pickup creates a real failure", () => {
+test("the eight-round limit still creates a real failure", () => {
   const t = fixture(),
     a = t.attempt;
-  a.robots[1].history = [GENERATOR];
+  a.robots[1].history = [PRESSURE_PLATE];
   for (let round = 1; round <= 8; round++) {
-    if (round <= 2) action(t, "p1", "power", { on: true });
     for (const m of t.members) action(t, m.id, "coord-ready");
     for (const m of t.members) action(t, m.id, "moves", { moves: [] });
     if (round < 8) for (const m of t.members) action(t, m.id, "next");
   }
   assert.equal(a.phase, "ended");
-  assert.equal(a.powerCharges, 0);
+  assert.equal(a.powerCharges, undefined);
   assert.equal(a.objectives[0].status, "waiting");
   assert.deepEqual(t.restored, []);
 });
