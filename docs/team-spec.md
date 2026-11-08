@@ -4,7 +4,7 @@ Version 6 · 8 November 2026 · Browser game · Adults only
 
 ## Product and scope
 
-A calm cooperative robot strategy game for autistic adults and invited adult friends. Teams restore a persistent shared world by completing missions together. Communication is useful to the mission: hold a pressure plate, request energy, offer responsibility, mark a route and agree on timing.
+A calm cooperative robot strategy game for autistic adults and invited adult friends. Teams restore a persistent shared world by completing missions together. Communication is useful to the mission: hold a pressure plate, request energy, mark a route and agree on timing.
 
 There are no mandatory scenario questions, dialogue-score rewards or AI judgments in Team Missions. Practice and Race are removed from the app. The eight conversations remain archived in the repository. The mission is allowed to be difficult and teams can lose. No one needs to type, speak or use a prescribed sentence to receive movement energy.
 
@@ -29,7 +29,7 @@ Retrieve the assigned components, deliver them by entering base, and return ever
 | 3 | Water pump, control module, seed container |
 | 4 | Water pump, control module, seed container, moisture sensor |
 
-Each player initially claims one component. During coordination they can offer an uncollected responsibility to someone else. The recipient must accept. This is a task handoff, not a cargo teleport: a robot still carries at most one item. After accepting multiple tasks, a player needs multiple deliveries.
+Players claim components before departure. Ownership stays fixed for the mission; task transfers are not available. A robot carries at most one item.
 
 All routes and the map remain visible. Robots can occupy the same tile. No hidden social-intention answer key is involved.
 
@@ -61,7 +61,7 @@ Pressure plate **A** is at column 6, row 8. Matching gate **A** is at column 4, 
 
 **Briefing → Coordination → Route planning → Resolution/review → Next coordination**
 
-Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players signal, ping, transfer energy, negotiate task handoffs and decide who will hold the plate. All ready before route planning. Changes to assignments, energy or positions reset readiness.
+Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players signal, ping, transfer energy, decide who will hold the plate. All ready before route planning. Changes to assignments, energy or positions reset readiness.
 
 Players then queue routes or choose to stay. Routes execute after everyone locks in. The server validates energy, roles, ownership and per-step plate occupancy. Resolution shows a factual event log. No one is scored for message length, tone, friendliness or number of messages.
 
@@ -71,9 +71,9 @@ All players explicitly continue to the next round. Anyone can request a break at
 
 ### Strategy signals
 
-Seven presets: I'll hold plate [letter]; Can you hold plate [letter]?; I'll collect; Can you take over plate [letter]?; Wait; I'm ready; I'm through. A compact A–Z selector changes the letter in plate signals; the current greenhouse map still has only plate A. Selecting a letter changes the message only, never the map. Each roster member has at most one current signal, shown inline beneath the map. A new signal replaces the previous one. Requests offer Yes/No replies, identified by player; players can change their reply. Other signals offer Got it, meaning seen. Replies never move robots, change assignments or lock readiness. Players can clear their own signal.
+Seven presets: I'll hold plate [letter]; Can you hold plate [letter]?; I'll collect; Can you take over plate [letter]?; Wait; I'm ready; I'm through. A compact A–Z selector changes the letter in plate signals; the current greenhouse map still has only plate A. Selecting a letter changes the message only, never the map. Each roster member has at most one current signal, shown in the mission controls panel beside the map on desktop and below it on smaller screens. A new signal replaces the previous one. Requests offer Yes/No replies, identified by player; players can change their reply. Other signals offer Got it, meaning seen. Replies never move robots, change assignments or lock readiness. Players can clear their own signal.
 
-Free chat is opt-in per browser under Settings and off by default. When enabled it appears in a collapsed, inline Free chat section. Other players may keep it off; there are no unread badges or pop-up prompts. It supports 1–280 literal characters per message, one message per two seconds, retaining 60 server-side and displaying the latest 20. Chat and signals make no sounds, even when other game effects are on. Free chat is optional for all players, with no diagnosis gate.
+Free chat is opt-in per browser under Settings and off by default. When enabled it appears in a collapsed Free chat bar at the bottom left. Other players may keep it off; there are no unread badges or pop-up prompts. It supports 1–280 literal characters per message, one message per two seconds, retaining 60 server-side and displaying the latest 20. Chat and signals make no sounds, even when other game effects are on. Free chat is optional for all players, with no diagnosis gate.
 
 Signals expire on the next round and new mission. Different signals are limited to one every two seconds; repeating the same signal is idempotent. No pop-ups, flashing, sounds or unread badges. Quiet mode disables live announcements while retaining visible signals and requests. No communication score.
 
@@ -85,7 +85,7 @@ Choose Meet here, Need help or Go here, then select a walkable tile by touch, mo
 
 An energy request stays in a visible team inbox across screen changes and refreshes. The sender can cancel. Teammates can Give 1 energy during coordination, or reply Not now. The request closes when fulfilled, cancelled or all other roster members decline. A normal transfer to that requester also resolves their request. Repeated clicks cannot apply the transfer twice. Requests do not expire because another signal arrived.
 
-Task offers appear in the same inbox with Accept and Decline/cancel. Only the recipient can accept. Pending task offers block readiness until resolved, because the team has not agreed on ownership.
+Old pending task offers are cleared without changing ownership, so existing missions can continue. Retired task-transfer actions are rejected.
 
 Break requests also remain visible. Quiet mode retains these mission-critical controls. New attempts clear old requests and pings while retaining world progress.
 
@@ -113,7 +113,7 @@ Selected players automatically enter a new active mission when polling receives 
 
 ## Acceptance and demonstration
 
-- Two browsers can exchange and acknowledge preset signals and see persistent energy requests, fulfilment confirmations, accepted/declined task offers and labelled map pings.
+- Two browsers can exchange and acknowledge preset signals and see persistent energy requests, fulfilment confirmations, labelled map pings.
 - Completed areas stay coloured after reload or replay. Practice and Race are absent.
 - A single robot cannot leave the plate and cross the closed gate alone.
 - Plate occupancy updates on each step, including arrival, departure and handoff; roster order does not affect gate access.
@@ -147,3 +147,7 @@ Persistent teams and shared-world missions are proposed ways to create reasons t
 The authored choices are justified by their visible fictional goals and constraints. Research does not certify those answer keys. Circa is not required: it is an NLP dataset, not an adult autism curriculum. [Dataset context](https://github.com/google-research-datasets/circa)
 
 **Approved research wording:** “Common Ground draws on research into autistic adults' gaming preferences and evidence from related simulated communication practice. We are applying those ideas to cooperative play; this prototype has not yet been evaluated for real-world communication or belonging outcomes.”
+
+### Mission layout
+
+On desktop, the complete square board fits in the available viewport. Route controls, requests, gate status, pings, signals, and crew share an independently scrolling right panel. Phones, short windows and narrow layouts stack the board above controls. Entry nickname guidance and the route-preview note are omitted.

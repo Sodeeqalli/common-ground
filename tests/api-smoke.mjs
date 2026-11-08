@@ -132,10 +132,15 @@ await action(0, "ping", { at: PRESSURE_PLATE, kind: "meet" });
 const ping = (await read(1)).pings[0];
 assert.equal(ping.member, ids[0]);
 assert.deepEqual(ping.at, PRESSURE_PLATE);
-await action(0, "swap-request", { objective: "pump", to: ids[1] });
-assert.equal((await read(1)).attempt.swap.from, ids[0]);
-await action(1, "swap-answer", { accept: false });
-assert.equal((await read()).attempt.swap, null);
+const retiredOffer = await request(
+  tokens[0],
+  body(await read(), "swap-request", { objective: "pump", to: ids[1] }),
+);
+assert.equal(retiredOffer.status, 400);
+assert.equal(
+  (await read()).attempt.objectives.find((o) => o.id === "pump").owner,
+  ids[0],
+);
 const routes = [
   [
     ["up", "up", "left"],
@@ -197,7 +202,7 @@ assert.deepEqual((await read(1)).restored, ["greenhouse"]);
 assert.deepEqual((await read(1)).contributions, done.contributions);
 assert.equal((await fetch(base + "/api/scenarios")).status, 404);
 console.log(
-  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world and contributor names, retry preservation and removal of the Practice endpoint.",
+  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, retired task-transfer rejection, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world and contributor names, retry preservation and removal of the Practice endpoint.",
 );
 
 if (process.env.QA_TEAM_REPORT) {

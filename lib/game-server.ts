@@ -86,6 +86,8 @@ export function normalizeTeam(team: Team): Team {
   team.signalSentAt ??= {};
   team.contributions ??= {};
   const a = team.attempt;
+  // Retire pending task offers without changing ownership or blocking readiness.
+  if (a) a.swap = null;
   // Only backfill from a retained success, never the current membership or a failed retry.
   if (a?.phase === "success" && team.restored.includes("greenhouse"))
     recordContributors(team, "greenhouse", a.roster);
@@ -393,7 +395,7 @@ export function applyAction(
     return;
   }
   if (type === "release") {
-    demand(a.phase === "briefing", "Use a task swap after departure.");
+    demand(a.phase === "briefing", "Tasks can only change before departure.");
     a.objectives
       .filter((o) => o.owner === member)
       .forEach((o) => (o.owner = null));
@@ -443,44 +445,10 @@ export function applyAction(
     a.rosterReady = [];
     return;
   }
-  if (type === "swap-request") {
-    demand(
-      a.phase === "coordination" && !a.swap,
-      "Finish the pending task request first.",
-    );
-    const obj = a.objectives.find((o) => o.id === action.objective);
-    const to = a.robots.find((r) => r.id === action.to);
-    demand(
-      obj &&
-        obj.owner === member &&
-        obj.status === "waiting" &&
-        to &&
-        to.id !== member,
-      "Only an uncollected task you own can be offered to another teammate.",
-    );
-    a.swap = { objective: obj.id, from: member, to: to.id };
-    a.rosterReady = [];
-    return;
-  }
-  if (type === "swap-answer") {
-    demand(
-      a.phase === "coordination" &&
-        a.swap &&
-        [a.swap.from, a.swap.to].includes(member),
-      "There is no task offer for you.",
-    );
-    if (action.accept) {
-      demand(a.swap.to === member, "Only the recipient can accept.");
-      a.objectives.find((o) => o.id === a.swap!.objective)!.owner = member;
-    }
-    a.swap = null;
-    a.rosterReady = [];
-    return;
-  }
   if (type === "coord-ready") {
     demand(
-      a.phase === "coordination" && !a.swap,
-      "Resolve the task offer before planning.",
+      a.phase === "coordination",
+      "Ready is available during planning together.",
     );
     a.rosterReady = [...new Set([...a.rosterReady, member])];
     if (a.rosterReady.length === a.roster.length) {

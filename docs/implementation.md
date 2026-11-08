@@ -7,7 +7,7 @@ The current rules are [team-spec.md](team-spec.md), version 6. Missions no longe
 - Persistent teams and world restoration; two-to-four-player greenhouse expedition.
 - Shared planning, route previews, fixed energy income and an eight-round limit.
 - Automatic occupancy-controlled plate A and gate A; no charges or activation API. Movement resolves one step per robot at a time, plate changes before gate entries. Pump access has no bypass or additional interlock.
-- Seven preset signals, one per player, with explicit acknowledgements and round expiry. Plate requests have Yes/No replies; the letter is editable. Free chat is opt-in under Settings, with no floating launcher.
+- Seven preset signals, one per player, with explicit acknowledgements and round expiry. Plate requests have Yes/No replies; the letter is editable. Free chat is opt-in under Settings, with an expandable bottom-left bar.
 - Map pings with sender, label, coordinates and one pin per player, two-second throttling and round expiry.
 - Persistent energy requests with fulfil/decline/cancel, accepted task handoffs, and visible pause requests.
 - Low-stimulation four-part world picture driven by persisted restored-region IDs.
@@ -22,9 +22,9 @@ Attempts from the old relay rules are ended safely during normalization. The obs
 
 ## Verification
 
-The rule suite covers all 72 archived dialogue paths, automatic mission energy, automatic plate activation/deactivation, same-step crossings, roster-order independence, plate handoffs, safe gate exits, conditional route previews, batteries, durable energy requests, consented task offers, labelled pings, signal validation, acknowledgements, replacement, throttling and round expiry, pause/recharge semantics, legacy state upgrades and coordinated wins for 2/3/4 players. A loss test reaches the eight-round deadline without completing the retrievals.
+The rule suite covers all 72 archived dialogue paths, automatic mission energy, automatic plate activation/deactivation, same-step crossings, roster-order independence, plate handoffs, safe gate exits, conditional route previews, batteries, durable energy requests, retired task-offer rejection and saved-mission recovery, labelled pings, signal validation, acknowledgements, replacement, throttling and round expiry, pause/recharge semantics, legacy state upgrades and coordinated wins for 2/3/4 players. A loss test reaches the eight-round deadline without completing the retrievals.
 
-The local HTTP smoke test uses two independent identities and concurrent signals, readiness and route submissions. It verifies signal delivery and acknowledgement, optional chat and text validation, round expiry, request delivery and exactly-once fulfilment, changed-plan rejection, ping propagation, task-offer decline, an eight-round victory, world persistence and Practice endpoint removal.
+The local HTTP smoke test uses two independent identities and concurrent signals, readiness and route submissions. It verifies signal delivery and acknowledgement, optional chat and text validation, round expiry, request delivery and exactly-once fulfilment, changed-plan rejection, ping propagation, task-transfer endpoint removal, an eight-round victory, world persistence and Practice endpoint removal.
 
 ## Limits
 
@@ -41,3 +41,7 @@ Stay (empty routes, including plate holding) now discards remaining energy on re
 Per-area `contributions` stores deduplicated member ID/name/colour snapshots. Credits are saved atomically with successful mission resolution, including all roster members. Replays append new contributors without changing the original restoration date. Read normalization can recover legacy credits from a retained successful attempt; missing history is never inferred from current membership. World attribution is a static text/avatar row below the picture; missions remain 2–4 players.
 
 The UI uses a lower-saturation sage and warm-stone palette with softer light surfaces. Text and functional state labels retain contrast; the world image and robot art are gently desaturated. No dark mode or extra animation is introduced.
+
+Active desktop missions use a viewport-height shell, compact header and a size-contained board column. The board scales to both available width and height; controls scroll independently on the right. Focused controls-panel arrow keys scroll the panel instead of queuing a route. Narrow or short viewports fall back to the stacked page layout. Requests render once, inside the panel during active missions and in the existing location otherwise. Optional chat renders once as a collapsible bottom-left bar across world and mission screens.
+
+Obstacle feedback is a static, high-visibility strip above the board. It names the affected players and respects Quiet mode for announcements; no additional motion or sound is introduced.

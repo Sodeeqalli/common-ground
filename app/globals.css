@@ -2852,3 +2852,296 @@ main > footer {
 .robot-art {
   filter: saturate(0.65);
 }
+
+/* The board stays visible while the adjacent controls scroll. */
+.mission-view {
+  min-width: 0;
+}
+.mission-controls {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mission-controls > * {
+  flex-shrink: 0;
+}
+.mission-controls .team-inbox {
+  position: static;
+  max-height: none;
+  margin: 0;
+  box-shadow: none;
+}
+.mission-controls .action-panel {
+  padding: 18px;
+  gap: 14px;
+}
+.mission-controls .action-panel h2 {
+  font-size: 24px;
+}
+.mission-controls .plate-status,
+.mission-controls .crew-cards,
+.mission-controls .mission-bottom,
+.mission-controls .optional-chat,
+.mission-controls .strategy-signals,
+.mission-controls .ping-toolbar,
+.mission-controls .ping-feed,
+.mission-controls .ping-hint {
+  margin: 0;
+}
+.mission-controls .signal-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mission-controls .signal-row > .signal-replies {
+  flex-shrink: 0;
+}
+.mission-controls .crew-card {
+  padding: 8px;
+  gap: 6px;
+}
+.mission-controls .crew-card svg {
+  width: 23px;
+}
+.mission-controls .ping-toolbar button {
+  min-height: 36px;
+}
+.mission-controls:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+@media (min-width: 960px) and (min-height: 540px) {
+  .mission-active {
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .mission-active .topbar {
+    height: 64px;
+    flex: 0 0 64px;
+    padding: 0 24px;
+  }
+  .mission-active .app-body {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    grid-template-columns: 184px minmax(0, 1fr);
+  }
+  .mission-active .sidebar {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 12px;
+  }
+  .mission-active .team-panel {
+    padding: 14px 10px;
+    margin-top: 16px;
+  }
+  .mission-active .team-panel h3 {
+    font-size: 23px;
+    overflow-wrap: anywhere;
+  }
+  .mission-active .invite-code strong {
+    font-size: 11px;
+  }
+  .mission-screen {
+    padding: 12px 20px 16px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mission-screen > .status-line {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+  }
+  .mission-screen > .alert {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+  }
+  .mission-screen .mission-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .mission-screen .mission-header {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .mission-screen .mission-header h1 {
+    font-size: 28px;
+  }
+  .mission-screen .mission-header .button {
+    min-height: 32px;
+    padding: 7px 12px;
+  }
+  .mission-screen .phase-track {
+    flex: 0 0 auto;
+    padding: 8px 0;
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+  .mission-screen .mission-layout {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    gap: 18px;
+    align-items: stretch;
+  }
+  .mission-screen .board-column {
+    min-height: 0;
+    container-type: size;
+  }
+  .mission-screen .map-wrap {
+    height: 100%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mission-screen .mission-map {
+    flex: 0 0 auto;
+    width: min(calc(100cqw - 26px), calc(100cqh - 130px));
+    height: auto;
+    max-height: none;
+  }
+  .mission-screen .map-legend {
+    flex: 0 0 auto;
+    margin: 0;
+    justify-content: center;
+    gap: 6px 12px;
+  }
+  .mission-screen .collision-caption {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .mission-screen .mission-controls {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    padding: 2px 8px 12px 2px;
+  }
+}
+@media (max-width: 959px), (max-height: 539px) {
+  .mission-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mission-screen .status-line {
+    margin-bottom: 12px;
+  }
+  .mission-screen .mission-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .mission-screen .mission-header h1 {
+    font-size: 28px;
+  }
+  .mission-screen .phase-track {
+    padding: 10px 0;
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+  .mission-screen .mobile-team-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 0 14px;
+    padding: 8px;
+    gap: 6px 12px;
+  }
+  .mission-screen .mission-map {
+    max-height: none;
+  }
+}
+
+/* Opt-in chat stays tucked into the bottom-left corner. */
+.chat-dock {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  width: 156px;
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  border: 1px solid #a5aaa0;
+  box-shadow: 0 3px 14px #333b3610;
+  overflow: hidden;
+}
+.chat-dock.is-open {
+  width: min(340px, calc(100vw - 32px));
+}
+.chat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #dfe1da;
+}
+.chat-toggle span {
+  flex: 1;
+  text-align: left;
+}
+.chat-dock-body {
+  padding: 0 14px 14px;
+  max-height: min(460px, calc(100dvh - 110px));
+  overflow-y: auto;
+}
+.chat-dock .optional-chat-history {
+  max-height: min(200px, 30dvh);
+}
+.chat-dock textarea {
+  resize: none;
+}
+
+.map-notice {
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+.map-wrap .collision-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 9px 12px;
+  min-height: 40px;
+  border: 1px solid #a5aaa0;
+  border-radius: 6px;
+  background: #deddd4;
+  color: #42483f;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.collision-caption strong {
+  flex-shrink: 0;
+}
+.collision-caption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 960px) and (min-height: 540px) {
+  .mission-screen .map-notice {
+    min-height: 40px;
+  }
+}
+@media (max-width: 959px), (max-height: 539px) {
+  .map-notice:empty {
+    display: none;
+  }
+  .map-notice:not(:empty) {
+    margin-bottom: 10px;
+  }
+}

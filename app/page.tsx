@@ -313,7 +313,9 @@ export default function CommonGround() {
     if (screen !== "mission" || a?.phase !== "planning") return;
     const handler = (e: KeyboardEvent) => {
       if (
-        (e.target as HTMLElement).closest("input,textarea,select,button") ||
+        (e.target as HTMLElement).closest(
+          "input,textarea,select,button,[data-scroll-panel]",
+        ) ||
         settings ||
         rules
       )
@@ -335,9 +337,11 @@ export default function CommonGround() {
     return () => window.removeEventListener("keydown", handler);
   });
   const restored = !!team?.restored.includes("greenhouse");
+  const activeMission =
+    screen === "mission" && !!a && !["success", "ended"].includes(a.phase);
   return (
     <div
-      className={`app-shell ${motion ? "reduced-motion" : ""} ${large ? "large-text" : ""}`}
+      className={`app-shell ${activeMission ? "mission-active" : ""} ${motion ? "reduced-motion" : ""} ${large ? "large-text" : ""}`}
     >
       <header className="topbar" inert={modalOpen}>
         <a
@@ -440,7 +444,10 @@ export default function CommonGround() {
             )}
           </div>
         </aside>
-        <main id="main-content">
+        <main
+          id="main-content"
+          className={activeMission ? "mission-screen" : undefined}
+        >
           <div className="status-line">
             <span className="breadcrumb">
               {team?.name || "Common Ground"} <ChevronRight size={13} />{" "}
@@ -470,7 +477,7 @@ export default function CommonGround() {
               </button>
             </div>
           )}
-          {team && (
+          {team && !activeMission && (
             <TeamRequests
               team={team}
               busy={busy}
@@ -571,11 +578,13 @@ export default function CommonGround() {
               <Button onClick={launchMission}>Choose team</Button>
             </div>
           )}
-          {team && freeChat && (
-            <FreeChat team={team} busy={busy} quiet={quiet} onAction={act} />
-          )}
         </main>
       </div>
+      {team && freeChat && (
+        <div inert={modalOpen}>
+          <FreeChat team={team} busy={busy} quiet={quiet} onAction={act} />
+        </div>
+      )}
       {auth && (
         <div className="modal-backdrop" onClick={() => setAuth(null)}>
           <section
@@ -651,7 +660,6 @@ export default function CommonGround() {
             >
               {auth === "create" ? "Join instead" : "Create instead"}
             </button>
-            <p className="tiny">Adults · Use a nickname.</p>
           </section>
         </div>
       )}

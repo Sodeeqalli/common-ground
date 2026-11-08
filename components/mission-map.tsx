@@ -63,9 +63,21 @@ export default function MissionMap({
   }, [collisionKey, reducedMotion]);
   return (
     <div className={`map-wrap ${pingKind ? "ping-active" : ""}`}>
-      <div className="map-meta">
-        <span>Map</span>
-        <span></span>
+      <div
+        className="map-notice"
+        aria-live={quiet ? "off" : "polite"}
+        aria-atomic="true"
+      >
+        {!!attempt.collisions?.length && (
+          <p className="collision-caption">
+            <strong>Hit obstacle</strong>
+            <span
+              title={attempt.collisions.map((c) => name(c.member)).join(", ")}
+            >
+              {attempt.collisions.map((c) => name(c.member)).join(", ")}
+            </span>
+          </p>
+        )}
       </div>
       <div
         className="mission-map"
@@ -198,12 +210,6 @@ export default function MissionMap({
           );
         })}
       </div>
-      {!!attempt.collisions?.length && (
-        <p className="collision-caption" aria-live={quiet ? "off" : "polite"}>
-          {attempt.collisions.map((c) => name(c.member)).join(", ")} · Hit
-          obstacle
-        </p>
-      )}
       <div className="map-legend">
         <span>
           <i>⌂</i> Base / delivery
@@ -218,21 +224,6 @@ export default function MissionMap({
           <i>ϟ</i> +1 energy
         </span>
       </div>
-      {pings.length > 0 && (
-        <div className="ping-feed" aria-live={quiet ? "off" : "polite"}>
-          {pings.map((p) => (
-            <p key={p.id}>
-              <strong>{name(p.member)}</strong>:{" "}
-              {p.kind === "meet"
-                ? "Meet here"
-                : p.kind === "help"
-                  ? "Need help"
-                  : "Go here"}{" "}
-              · column {p.at.x + 1}, row {p.at.y + 1}{" "}
-            </p>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

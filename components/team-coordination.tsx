@@ -1,6 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { MessageCircle, Zap, Check, ArrowRight } from "lucide-react";
+import {
+  MessageCircle,
+  Zap,
+  Check,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import {
   STRATEGY_SIGNALS,
   PLATE_SIGNALS,
@@ -31,10 +37,7 @@ export default function TeamRequests({ team, busy, quiet, onAction }: Props) {
     team.members.find((m) => m.id === id)?.name || "Teammate";
   return (
     <>
-      {(pending.length > 0 ||
-        a?.swap ||
-        a?.pauseRequested ||
-        completed.length > 0) && (
+      {(pending.length > 0 || a?.pauseRequested || completed.length > 0) && (
         <section
           className="team-inbox"
           aria-label="Team requests"
@@ -43,7 +46,7 @@ export default function TeamRequests({ team, busy, quiet, onAction }: Props) {
           <div className="inbox-title">
             <MessageCircle size={16} />
             <strong>Team requests</strong>
-            <span>{pending.length + (a?.swap ? 1 : 0)} pending</span>
+            <span>{pending.length} pending</span>
           </div>
           {pending.map((q) => (
             <div className="request-card" key={q.id}>
@@ -116,37 +119,6 @@ export default function TeamRequests({ team, busy, quiet, onAction }: Props) {
               </div>
             </div>
           ))}
-          {a?.swap && (
-            <div className="request-card">
-              <ArrowRight size={20} />
-              <div>
-                <strong>
-                  {name(a.swap.from)} offers{" "}
-                  {a.objectives.find((o) => o.id === a.swap!.objective)?.name}{" "}
-                  to {name(a.swap.to)}
-                </strong>
-              </div>
-              <div className="request-buttons">
-                {a.swap.to === team.me && (
-                  <button
-                    className="button primary compact"
-                    disabled={busy}
-                    onClick={() => onAction("swap-answer", { accept: true })}
-                  >
-                    Accept task
-                  </button>
-                )}
-                {[a.swap.from, a.swap.to].includes(team.me) && (
-                  <button
-                    disabled={busy}
-                    onClick={() => onAction("swap-answer", { accept: false })}
-                  >
-                    Decline / cancel
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
           {a?.pauseRequested && active && (
             <p className="request-status">
               A teammate requested a break.{" "}
@@ -325,14 +297,26 @@ export function FreeChat({ team, busy, quiet, onAction }: Props) {
     return () => clearTimeout(timer);
   }, [latestOwn]);
   return (
-    <details
-      className="optional-chat"
-      onToggle={(e) => setOpen(e.currentTarget.open)}
+    <section
+      className={`optional-chat chat-dock ${open ? "is-open" : ""}`}
+      aria-label="Free chat"
+      data-scroll-panel
     >
-      <summary>Free chat</summary>
-      <p className="chat-note">Only players with Free chat on see messages.</p>
+      <button
+        className="chat-toggle"
+        aria-expanded={open}
+        aria-controls="free-chat-panel"
+        onClick={() => setOpen(!open)}
+      >
+        <MessageCircle size={18} />
+        <span>Free chat</span>
+        {open ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      </button>
       {open && (
-        <>
+        <div id="free-chat-panel" className="chat-dock-body">
+          <p className="chat-note">
+            Only players with Free chat on see messages.
+          </p>
           <div
             className="optional-chat-history"
             role="log"
@@ -373,8 +357,8 @@ export function FreeChat({ team, busy, quiet, onAction }: Props) {
               Send
             </button>
           </form>
-        </>
+        </div>
       )}
-    </details>
+    </section>
   );
 }

@@ -260,14 +260,18 @@ test("request decline is explicit; sender can cancel, but outsiders cannot", () 
   });
   assert.equal(t.energyRequests[1].status, "cancelled");
 });
-test("task offers require recipient consent and reset shared readiness", () => {
+test("retired task offers cannot change ownership or block a saved mission", () => {
   const t = fixture();
-  action(t, "p0", "swap-request", { objective: "pump", to: "p1" });
-  assert.equal(publicView(t, "p1").attempt.swap.from, "p0");
-  assert.throws(() => action(t, "p0", "swap-answer", { accept: true }));
-  action(t, "p1", "swap-answer", { accept: true });
-  assert.equal(t.attempt.objectives[0].owner, "p1");
-  assert.equal(t.attempt.swap, null);
+  assert.throws(() =>
+    action(t, "p0", "swap-request", { objective: "pump", to: "p1" }),
+  );
+  t.attempt.swap = { objective: "pump", from: "p0", to: "p1" };
+  assert.throws(() => action(t, "p1", "swap-answer", { accept: true }));
+  assert.equal(t.attempt.objectives[0].owner, "p0");
+  assert.equal(publicView(t, "p1").attempt.swap, null);
+  action(t, "p0", "coord-ready");
+  action(t, "p1", "coord-ready");
+  assert.equal(t.attempt.phase, "planning");
 });
 test("map pings identify sender, round and tile; invalid tiles and kinds are rejected", () => {
   const t = fixture();
