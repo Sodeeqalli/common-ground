@@ -1,3 +1,5 @@
+import type { Team } from "../shared/game";
+
 export function RobotArt({
   color = "#397a60",
   label = "",
@@ -40,19 +42,49 @@ export function RobotArt({
   );
 }
 
-export const WORLD_REGIONS = [
-  "greenhouse",
-  "power",
-  "bridge",
-  "workshop",
+const WORLD_AREAS = [
+  { id: "greenhouse", name: "Greenhouse", x: 0, y: 0 },
+  { id: "power", name: "Power station", x: 768, y: 0 },
+  { id: "bridge", name: "Bridge", x: 0, y: 512 },
+  { id: "workshop", name: "Workshop", x: 768, y: 512 },
 ] as const;
+export function WorldContributors({ team }: { team: Team }) {
+  return (
+    <div className="world-contributions">
+      {WORLD_AREAS.filter((area) => team.restored.includes(area.id)).map(
+        (area) => {
+          const members = team.contributions?.[area.id] || [];
+          return (
+            <section
+              key={area.id}
+              className="area-contributors"
+              aria-label={`${area.name} contributors`}
+            >
+              <h2>{area.name}</h2>
+              {members.length ? (
+                <div className="contributor-credit">
+                  <span>Built by</span>
+                  <ul>
+                    {members.map((member) => (
+                      <li key={member.id}>
+                        <RobotArt small color={member.color} />
+                        <span>{member.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p>Built by your team</p>
+              )}
+            </section>
+          );
+        },
+      )}
+    </div>
+  );
+}
 export default function WorldArt({ restored = [] }: { restored?: string[] }) {
-  const regions = [
-    { id: "greenhouse", name: "Greenhouse", x: 0, y: 0 },
-    { id: "power", name: "Power station", x: 768, y: 0 },
-    { id: "bridge", name: "Bridge", x: 0, y: 512 },
-    { id: "workshop", name: "Workshop", x: 768, y: 512 },
-  ];
+  const regions = WORLD_AREAS;
   return (
     <svg
       className="world-art mural-art"

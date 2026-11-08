@@ -57,11 +57,23 @@ export function newTeam(
     members: [{ id: member, name: alias, color: COLORS[0] }],
     restored: [],
     restoredAt: null,
+    contributions: {},
     attempt: null,
     version: 0,
     processed: [],
     messages: [],
   };
+}
+// Credit the whole successful roster, including plate holders and support players.
+// Snapshot names and colours so later roster changes cannot rewrite attribution.
+function recordContributors(team: Team, area: string, roster: string[]) {
+  team.contributions ??= {};
+  const credits = (team.contributions[area] ??= []);
+  for (const id of roster) {
+    const member = team.members.find((m) => m.id === id);
+    if (member && !credits.some((m) => m.id === id))
+      credits.push({ ...member });
+  }
 }
 // Older active attempts cannot safely resume under the new resource/gate rules.
 // Normalize on read and next write, preserving team identity and restored regions.
@@ -70,7 +82,11 @@ export function normalizeTeam(team: Team): Team {
   team.pings ??= [];
   team.signals ??= [];
   team.signalSentAt ??= {};
+  team.contributions ??= {};
   const a = team.attempt;
+  // Only backfill from a retained success, never the current membership or a failed retry.
+  if (a?.phase === "success" && team.restored.includes("greenhouse"))
+    recordContributors(team, "greenhouse", a.roster);
   if (a && a.rulesVersion !== 3) {
     team.upgradeNotice =
       "The gate now uses a pressure plate. Start a fresh expedition with the updated map; your restored world is safe.";
@@ -486,12 +502,12 @@ export function applyAction(
     r.ready = true;
     if (a.robots.every((r) => r.ready)) {
       execute(a);
-      if (
-        String(a.phase) === "success" &&
-        !team.restored.includes("greenhouse")
-      ) {
-        team.restored.push("greenhouse");
-        team.restoredAt = new Date().toISOString();
+      if (String(a.phase) === "success") {
+        if (!team.restored.includes("greenhouse")) {
+          team.restored.push("greenhouse");
+          team.restoredAt = new Date().toISOString();
+        }
+        recordContributors(team, "greenhouse", a.roster);
       }
     }
     return;

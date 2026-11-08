@@ -15,7 +15,7 @@ import {
   Lock,
   LoaderCircle,
 } from "lucide-react";
-import WorldArt, { RobotArt } from "../components/world-art";
+import WorldArt, { RobotArt, WorldContributors } from "../components/world-art";
 import MissionControl from "../components/mission-control";
 import TeamRequests, { FreeChat } from "../components/team-coordination";
 import { readinessContext, type Team, type Direction } from "../shared/game";
@@ -504,6 +504,9 @@ export default function CommonGround() {
               </section>
               <section className="world-picture" aria-label="World progress">
                 <WorldArt restored={team?.restored || []} />
+                {team && team.restored.length > 0 && (
+                  <WorldContributors team={team} />
+                )}
               </section>
               <section className="world-missions" aria-label="Missions">
                 <div className="world-mission available">

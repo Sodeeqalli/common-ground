@@ -2684,6 +2684,51 @@ main > footer {
   gap: 12px;
   margin: 18px 0 30px;
 }
+.world-contributions {
+  border-top: 1px solid var(--line);
+  padding: 16px 20px;
+  display: grid;
+  gap: 16px;
+}
+.area-contributors h2 {
+  font: 600 13px/1.5 var(--font-sans, sans-serif);
+  margin: 0 0 8px;
+}
+.contributor-credit {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.contributor-credit > span,
+.area-contributors p {
+  font-size: 12px;
+  color: #637259;
+}
+.contributor-credit ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+}
+.contributor-credit li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.contributor-credit .robot-art {
+  width: 20px;
+  height: 23px;
+  flex: 0 0 20px;
+}
+.large-text .contributor-credit li {
+  font-size: 16px;
+}
 .world-mission {
   display: flex;
   align-items: center;

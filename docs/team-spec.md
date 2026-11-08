@@ -16,7 +16,8 @@ The shipped world has one playable mission, Restore the Greenhouse. The power st
 - Up to twelve members can belong to a team. The host selects two to four for an expedition, including themselves.
 - Invited members outside the expedition can watch. Mission actions belong to the selected roster.
 - Guest identity is remembered in this browser. Clearing browser data or leaving membership loses that identity; rejoining creates another robot. Full account recovery is not built.
-- Team progress, accepted actions, signals, requests and pings are server-backed. The local and hosted databases are separate.
+- Completed areas show a quiet “Built by” row with robot avatars and contributor names. Every member of a successful mission roster is credited, including plate holders and helpers. Successful replays add new people once each; failures and spectators earn no completion credit. Name and colour snapshots persist through retries and later membership changes. Legacy records only recover names from a retained successful attempt; otherwise the area says “Built by your team” until a new success supplies names. There are no ranks or contribution scores.
+- Team progress, contributor records, accepted actions, signals, requests and pings are server-backed. The local and hosted databases are separate.
 
 ## Greenhouse mission
 

@@ -102,6 +102,7 @@ export type Team = {
   members: Member[];
   restored: string[];
   restoredAt: string | null;
+  contributions?: Record<string, Member[]>;
   attempt: Attempt | null;
   version: number;
   processed: string[];

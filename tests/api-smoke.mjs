@@ -182,6 +182,11 @@ assert.equal(done.attempt.phase, "success");
 assert.deepEqual(gateKeys(done.attempt), []);
 assert.deepEqual(done.restored, ["greenhouse"]);
 assert.equal(other.restoredAt, done.restoredAt);
+assert.deepEqual(
+  done.contributions.greenhouse.map((m) => m.id),
+  ids,
+);
+assert.deepEqual(other.contributions, done.contributions);
 assert.equal(done.messages.length, 2);
 assert.deepEqual(done.signals, []);
 await action(0, "new-mission", { roster: ids });
@@ -189,7 +194,16 @@ assert.deepEqual((await read()).energyRequests, []);
 assert.deepEqual((await read()).pings, []);
 await action(0, "retreat");
 assert.deepEqual((await read(1)).restored, ["greenhouse"]);
+assert.deepEqual((await read(1)).contributions, done.contributions);
 assert.equal((await fetch(base + "/api/scenarios")).status, 404);
 console.log(
-  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world, retry preservation and removal of the Practice endpoint.",
+  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world and contributor names, retry preservation and removal of the Practice endpoint.",
 );
+
+if (process.env.QA_TEAM_REPORT) {
+  const { writeFile } = await import("node:fs/promises");
+  await writeFile(
+    process.env.QA_TEAM_REPORT,
+    JSON.stringify({ code: first.data.team.code }),
+  );
+}

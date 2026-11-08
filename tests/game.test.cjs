@@ -366,11 +366,14 @@ for (const count of [2, 3, 4])
     assert.equal(t.attempt.phase, "success");
     assert.deepEqual(gateKeys(t.attempt), []);
     assert.deepEqual(t.restored, ["greenhouse"]);
+    assert.deepEqual(t.contributions.greenhouse, t.members);
+    const credits = structuredClone(t.contributions);
     const saved = t.restoredAt;
     action(t, "p0", "new-mission", { roster: t.members.map((m) => m.id) });
     action(t, "p0", "retreat");
     assert.deepEqual(t.restored, ["greenhouse"]);
     assert.equal(t.restoredAt, saved);
+    assert.deepEqual(t.contributions, credits);
   });
 test("the eight-round limit still creates a real failure", () => {
   const t = fixture(),
@@ -526,4 +529,66 @@ test("optional chat validates literal text, rate-limits, bounds history and requ
     action(t, "p0", "message", { text: "Test " + i });
   }
   assert.equal(t.messages.length, 60);
+});
+
+function winCurrentMission(t) {
+  const roster = t.attempt.roster;
+  for (let round = 1; round <= 8; round++) {
+    for (const id of roster) action(t, id, "coord-ready");
+    roster.forEach((id, i) =>
+      action(t, id, "moves", { moves: ROUTES[round - 1][i] }),
+    );
+    if (round < 8) for (const id of roster) action(t, id, "next");
+  }
+  assert.equal(t.attempt.phase, "success");
+}
+test("world credits include successful rosters, exclude observers and accumulate unique replay contributors", () => {
+  const t = fixture();
+  t.members.push({ id: "p2", name: "New teammate", color: "#667aa7" });
+  winCurrentMission(t);
+  assert.deepEqual(
+    t.contributions.greenhouse.map((m) => m.id),
+    ["p0", "p1"],
+  );
+  const saved = t.restoredAt;
+  t.members[0].name = "Changed name";
+  assert.equal(t.contributions.greenhouse[0].name, "Fern");
+  action(t, "p0", "new-mission", { roster: ["p0", "p2"] });
+  action(t, "p0", "claim", { objective: "pump" });
+  action(t, "p2", "claim", { objective: "controller" });
+  action(t, "p0", "brief-ready");
+  action(t, "p2", "brief-ready");
+  winCurrentMission(t);
+  const savedTeam = JSON.parse(JSON.stringify(t));
+  assert.deepEqual(
+    publicView(savedTeam, "p1").contributions.greenhouse.map((m) => m.id),
+    ["p0", "p1", "p2"],
+  );
+  normalizeTeam(savedTeam);
+  normalizeTeam(savedTeam);
+  assert.equal(savedTeam.contributions.greenhouse.length, 3);
+  assert.equal(savedTeam.restoredAt, saved);
+  assert.deepEqual(savedTeam.restored, ["greenhouse"]);
+  savedTeam.members = savedTeam.members.filter((m) => m.id !== "p1");
+  assert.equal(
+    publicView(savedTeam, "p0").contributions.greenhouse[1].name,
+    "Player 1",
+  );
+});
+test("legacy attribution only backfills retained successes and leaves unknown completions unassigned", () => {
+  const success = fixture();
+  winCurrentMission(success);
+  delete success.contributions;
+  normalizeTeam(success);
+  assert.deepEqual(success.contributions.greenhouse, success.members);
+  const unknown = fixture();
+  unknown.restored = ["greenhouse"];
+  unknown.attempt.phase = "ended";
+  delete unknown.contributions;
+  normalizeTeam(unknown);
+  assert.deepEqual(unknown.contributions, {});
+  action(unknown, "p0", "new-mission", { roster: ["p0", "p1"] });
+  action(unknown, "p0", "retreat");
+  assert.deepEqual(unknown.contributions, {});
+  assert.deepEqual(unknown.restored, ["greenhouse"]);
 });
