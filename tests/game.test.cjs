@@ -21,7 +21,12 @@ const {
   normalizeTeam,
 } = require("../.test-build/lib/game-server.js");
 function action(t, id, type, args = {}) {
-  applyAction(t, id, { type, attemptId: t.attempt?.id, ...args });
+  applyAction(t, id, {
+    type,
+    attemptId: t.attempt?.id,
+    round: t.attempt?.round,
+    ...args,
+  });
 }
 function fixture(n = 2) {
   const t = newTeam("t", "CODE", "Test", "p0", "Fern");
@@ -55,12 +60,13 @@ const ROUTES = [
     ["down", "down", "left", "left"],
   ],
   [
-    ["left", "left", "up", "up", "down", "down"],
+    ["left", "left", "up"],
     [],
     ["down", "down", "down"],
     ["down", "down", "down"],
   ],
-  [["right", "right", "right"], [], ["down"], ["down"]],
+  [["up", "down", "down"], [], ["down"], ["down"]],
+  [["right", "right", "right"], [], [], []],
   [["down", "down"], ["down", "down"], [], []],
 ];
 test("the eight optional scenarios retain all 72 valid authored paths", () => {
@@ -213,15 +219,15 @@ test("batteries award once per robot and only after execution", () => {
   execute(a);
   assert.equal(r.energy, 1);
 });
-test("an energy request survives chat, is visible to teammates, and transfers only once", () => {
+test("an energy request survives strategy signals, is visible to teammates, and transfers only once", () => {
   const t = fixture();
   action(t, "p0", "energy-request");
   action(t, "p0", "energy-request");
   assert.equal(t.energyRequests.length, 1);
   const id = t.energyRequests[0].id;
-  for (let i = 0; i < 65; i++)
-    action(t, "p1", "message", { text: "Message " + i });
-  assert.equal(t.messages.length, 60);
+  action(t, "p1", "signal", { kind: "hold" });
+  action(t, "p0", "signal-ack", { signal: t.signals[0].id });
+  action(t, "p1", "ping", { at: PRESSURE_PLATE, kind: "meet" });
   assert.equal(publicView(t, "p1").energyRequests[0].id, id);
   const before = readinessContext(t.attempt);
   action(t, "p0", "coord-ready");
@@ -275,25 +281,87 @@ test("map pings identify sender, round and tile; invalid tiles and kinds are rej
   );
   assert.throws(() => action(t, "p0", "ping", { at: BASE, kind: "teleport" }));
 });
-test("chat is bounded, preserves literal text, and works before a mission", () => {
-  const t = newTeam("t", "C", "T", "p0", "P");
-  action(t, "p0", "message", { text: "<b>Hold the gate</b>" });
-  assert.equal(t.messages[0].text, "<b>Hold the gate</b>");
+test("strategy signals deliver, acknowledge, replace and clear without affecting readiness", () => {
+  const t = fixture(3);
+  const before = readinessContext(t.attempt);
+  action(t, "p0", "signal", { kind: "hold" });
+  const id = t.signals[0].id;
+  assert.equal(publicView(t, "p1").signals[0].kind, "hold");
+  action(t, "p0", "signal", { kind: "hold" });
+  assert.equal(t.signals[0].id, id);
+  action(t, "p1", "signal-ack", { signal: id });
+  action(t, "p1", "signal-ack", { signal: id });
+  action(t, "p2", "signal-ack", { signal: id });
+  assert.deepEqual(t.signals[0].acknowledgedBy, ["p1", "p2"]);
+  assert.throws(() => action(t, "p0", "signal-ack", { signal: id }));
+  assert.throws(() => action(t, "p0", "signal", { kind: "through" }));
+  t.signalSentAt.p0 -= 2001;
+  action(t, "p0", "signal", { kind: "through" });
+  assert.equal(t.signals.length, 1);
+  assert.deepEqual(t.signals[0].acknowledgedBy, []);
+  assert.throws(() => action(t, "p1", "signal-ack", { signal: id }));
+  assert.equal(readinessContext(t.attempt), before);
+  assert.deepEqual(t.attempt.rosterReady, []);
+  action(t, "p0", "signal-clear");
+  assert.deepEqual(t.signals, []);
+  // Clearing cannot bypass the signal cooldown.
+  assert.throws(() => action(t, "p0", "signal", { kind: "wait" }));
+});
+test("signals are enum-only, roster-only and scoped to an active round", () => {
+  const t = fixture();
+  for (const kind of ["invented", "__proto__", "toString", "", null])
+    assert.throws(() => action(t, "p0", "signal", { kind }));
+  assert.throws(() => action(t, "p0", "signal", { kind: "hold", round: 0 }));
+  assert.throws(() => action(t, "outsider", "signal", { kind: "hold" }));
+  t.members.push({ id: "observer", name: "Observer", color: "#000" });
+  assert.throws(() => action(t, "observer", "signal", { kind: "hold" }));
   assert.throws(() => action(t, "p0", "message", { text: " " }));
-  assert.throws(() => action(t, "p0", "message", { text: "x".repeat(281) }));
-  assert.throws(() => action(t, "outsider", "message", { text: "No access" }));
+  t.messages = [{ member: "p0", text: "Old chat" }];
+  assert.equal(publicView(t, "p1").messages[0].text, "Old chat");
+  assert.equal(t.messages.length, 1);
+  t.attempt.phase = "ended";
+  assert.throws(() => action(t, "p0", "signal", { kind: "hold" }));
+});
+test("pings replace one per player, throttle changes, and expire with signals each round", () => {
+  const t = fixture();
+  action(t, "p0", "signal", { kind: "hold" });
+  action(t, "p0", "ping", { at: PRESSURE_PLATE, kind: "meet" });
+  const id = t.pings[0].id;
+  action(t, "p0", "ping", { at: PRESSURE_PLATE, kind: "meet" });
+  assert.equal(t.pings[0].id, id);
+  assert.throws(() => action(t, "p0", "ping", { at: BASE, kind: "route" }));
+  t.pings[0].sentAt -= 2001;
+  action(t, "p0", "ping", { at: BASE, kind: "route" });
+  action(t, "p1", "ping", { at: PRESSURE_PLATE, kind: "help" });
+  assert.equal(t.pings.length, 2);
+  assert.deepEqual(t.pings[0].at, BASE);
+  assert.throws(() =>
+    action(t, "p1", "ping", { at: BASE, kind: "route", round: 0 }),
+  );
+  action(t, "p0", "energy-request");
+  t.attempt.phase = "round-end";
+  action(t, "p0", "next");
+  action(t, "p1", "next");
+  assert.deepEqual(t.signals, []);
+  assert.deepEqual(t.pings, []);
+  assert.equal(t.energyRequests[0].status, "pending");
+  action(t, "p0", "signal", { kind: "hold" });
+  action(t, "p0", "retreat");
+  action(t, "p0", "new-mission", { roster: ["p0", "p1"] });
+  assert.deepEqual(t.signals, []);
+  assert.deepEqual(t.signalSentAt, {});
 });
 for (const count of [2, 3, 4])
-  test(`${count} players can win in seven rounds by holding the pressure plate`, () => {
+  test(`${count} players can win in eight rounds by holding the pressure plate`, () => {
     const t = fixture(count);
-    for (let round = 1; round <= 7; round++) {
+    for (let round = 1; round <= 8; round++) {
       const a = t.attempt;
       assert.equal(a.phase, "coordination");
       assert.equal(a.round, round);
       for (const m of t.members) action(t, m.id, "coord-ready");
       for (let i = 0; i < count; i++)
         action(t, "p" + i, "moves", { moves: ROUTES[round - 1][i] });
-      if (round < 7) for (const m of t.members) action(t, m.id, "next");
+      if (round < 8) for (const m of t.members) action(t, m.id, "next");
     }
     assert.equal(t.attempt.phase, "success");
     assert.deepEqual(gateKeys(t.attempt), []);
@@ -331,12 +399,12 @@ test("pause survives the boundary; everyone must resume; recharge cannot repeat"
   action(t, "p0", "next");
   assert.deepEqual(
     t.attempt.robots.map((r) => r.energy),
-    [3, 3],
+    [0, 0],
   );
   action(t, "p1", "next");
   assert.deepEqual(
     t.attempt.robots.map((r) => r.energy),
-    [6, 6],
+    [3, 3],
   );
   assert.throws(() => action(t, "p1", "next"));
 });
@@ -368,4 +436,94 @@ test("invalid moves, stale attempts and non-host launch are rejected", () => {
     action(t, "p0", "moves", { moves: ["up", "up", "up", "up"] }),
   );
   assert.throws(() => action(t, "p0", "moves", { moves: ["teleport"] }));
+});
+
+test("Stay discards energy at resolution; moving retains leftovers and waiting to submit does not spend it", () => {
+  const t = fixture();
+  t.attempt.robots[0].energy = 6;
+  t.attempt.robots[0].history = [PRESSURE_PLATE];
+  action(t, "p0", "coord-ready");
+  action(t, "p1", "coord-ready");
+  action(t, "p0", "moves", { moves: [] });
+  assert.equal(t.attempt.robots[0].energy, 6); // no real-time idle penalty
+  action(t, "p1", "moves", { moves: ["up"] });
+  assert.deepEqual(
+    t.attempt.robots.map((r) => r.energy),
+    [0, 2],
+  );
+  assert.deepEqual(gateKeys(t.attempt), ["green"]);
+  action(t, "p0", "next");
+  action(t, "p1", "next");
+  assert.deepEqual(
+    t.attempt.robots.map((r) => r.energy),
+    [3, 5],
+  );
+});
+test("collision feedback records attempted and rollback tiles for walls and closed gates", () => {
+  const wall = makeAttempt("wall", ["p0", "p1"]);
+  wall.robots[0].queue = ["up", "left"];
+  execute(wall);
+  assert.deepEqual(wall.collisions, [
+    { member: "p0", from: { x: 5, y: 8 }, attempted: { x: 4, y: 8 }, to: BASE },
+  ]);
+  assert.equal(wall.robots[0].energy, 1);
+  assert.deepEqual(position(wall.robots[0]), BASE);
+  const gate = makeAttempt("gate", ["p0", "p1"]);
+  gate.robots[0].history = [PRESSURE_PLATE, { x: 4, y: 7 }];
+  gate.robots[0].queue = ["left", "left"];
+  execute(gate);
+  assert.deepEqual(gate.collisions, [
+    { member: "p0", from: { x: 4, y: 7 }, attempted: GATE, to: PRESSURE_PLATE },
+  ]);
+  assert.equal(gate.robots[0].energy, 2);
+  assert.deepEqual(position(gate.robots[0]), PRESSURE_PLATE);
+  gate.robots[0].queue = [];
+  execute(gate);
+  assert.deepEqual(gate.collisions, []);
+});
+
+test("plate requests use editable letters and explicit yes/no without changing the plan", () => {
+  const t = fixture(3);
+  const before = readinessContext(t.attempt);
+  action(t, "p0", "signal", { kind: "ask_hold", plate: "B" });
+  const id = t.signals[0].id;
+  assert.equal(publicView(t, "p1").signals[0].plate, "B");
+  action(t, "p1", "signal-reply", { signal: id, response: "yes" });
+  action(t, "p2", "signal-reply", { signal: id, response: "no" });
+  assert.deepEqual(t.signals[0].responses, { p1: "yes", p2: "no" });
+  action(t, "p1", "signal-reply", { signal: id, response: "no" });
+  assert.deepEqual(t.signals[0].responses, { p1: "no", p2: "no" });
+  assert.throws(() =>
+    action(t, "p0", "signal-reply", { signal: id, response: "yes" }),
+  );
+  assert.throws(() =>
+    action(t, "p1", "signal-reply", { signal: id, response: "maybe" }),
+  );
+  assert.throws(() => action(t, "p1", "signal-ack", { signal: id }));
+  assert.throws(() =>
+    action(t, "p1", "signal", { kind: "ask_hold", plate: "<b>" }),
+  );
+  assert.equal(readinessContext(t.attempt), before);
+  assert.deepEqual(t.attempt.rosterReady, []);
+  t.signalSentAt.p0 -= 2001;
+  action(t, "p0", "signal", { kind: "ask_hold", plate: "C" });
+  assert.equal(t.signals.length, 1);
+  assert.equal(t.signals[0].plate, "C");
+  assert.deepEqual(t.signals[0].responses, {});
+  assert.throws(() =>
+    action(t, "p1", "signal-reply", { signal: id, response: "yes" }),
+  );
+});
+test("optional chat validates literal text, rate-limits, bounds history and requires membership", () => {
+  const t = fixture();
+  action(t, "p0", "message", { text: "<b>My plan</b>" });
+  assert.equal(publicView(t, "p1").messages[0].text, "<b>My plan</b>");
+  assert.throws(() => action(t, "p0", "message", { text: "Too soon" }));
+  assert.throws(() => action(t, "p0", "message", { text: "x".repeat(281) }));
+  assert.throws(() => action(t, "outsider", "message", { text: "No access" }));
+  for (let i = 0; i < 65; i++) {
+    t.messages[t.messages.length - 1].at = "2000-01-01";
+    action(t, "p0", "message", { text: "Test " + i });
+  }
+  assert.equal(t.messages.length, 60);
 });

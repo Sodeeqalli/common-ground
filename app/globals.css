@@ -2145,6 +2145,155 @@ main > footer {
   }
 }
 /* Shared planning and team communication */
+.strategy-signals {
+  margin: 18px 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.signals-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.signals-heading h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.signals-heading small {
+  font-size: 11px;
+  color: #637259;
+}
+.plate-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.plate-picker select {
+  font: inherit;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+}
+.signal-row > .signal-replies {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+}
+.signal-replies button {
+  padding: 8px 12px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.signal-replies button[aria-pressed="true"] {
+  background: #e8eddf;
+  border-color: #87997b;
+}
+.optional-chat {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.optional-chat summary {
+  cursor: pointer;
+  font-size: 14px;
+}
+.chat-note {
+  font-size: 12px;
+  margin: 12px 0;
+  color: #637259;
+}
+.optional-chat-history {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.optional-chat-history p {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.optional-chat-history span {
+  white-space: pre-wrap;
+}
+.optional-chat form {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.optional-chat textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px;
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.optional-chat form button {
+  justify-self: end;
+}
+.signal-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.signal-buttons button {
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.signal-buttons button[aria-pressed="true"] {
+  background: #e8eddf;
+  border-color: #87997b;
+}
+.signal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.signal-row > div {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.signal-row small {
+  font-size: 11px;
+  color: #637259;
+}
+.signal-row > button {
+  padding: 8px 12px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .signal-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .team-inbox {
   position: sticky;
   top: 8px;
@@ -2213,154 +2362,6 @@ main > footer {
   padding: 8px 16px;
   font-size: 11px;
   color: #586e49;
-}
-.channel-launcher {
-  position: fixed;
-  bottom: 22px;
-  right: 25px;
-  z-index: 25;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 18px;
-  border-radius: 10px;
-  background: #315b44;
-  color: #fff;
-  box-shadow: 0 4px 20px #25462d25;
-  font-size: 13px;
-}
-.channel-launcher.unread {
-  outline: 3px solid #c5a263;
-  outline-offset: 3px;
-}
-.channel-launcher b {
-  font-size: 10px;
-  background: #f3e6c5;
-  color: #65512d;
-  padding: 3px 5px;
-  border-radius: 4px;
-}
-.request-count {
-  font-size: 10px;
-  opacity: 0.85;
-}
-.team-channel {
-  position: fixed;
-  right: 25px;
-  bottom: 83px;
-  z-index: 25;
-  width: 365px;
-  max-width: calc(100vw - 32px);
-  height: min(520px, 70vh);
-  background: #fffefa;
-  border: 1px solid #c8d3bb;
-  box-shadow: 0 12px 50px #283b2930;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.team-channel > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 17px 18px;
-  background: #edf2e4;
-  border-bottom: 1px solid #dce5d0;
-}
-.team-channel > header > div {
-  display: grid;
-  gap: 6px;
-}
-.team-channel strong {
-  font-size: 13px;
-}
-.team-channel header small {
-  font-size: 9px;
-}
-.channel-history {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 80px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overscroll-behavior: contain;
-}
-.channel-history article {
-  background: #f0f1e9;
-  border-radius: 8px;
-  padding: 11px 13px;
-  margin-right: 16px;
-}
-.channel-history article.own-message {
-  background: #e7efdc;
-  margin-right: 0;
-  margin-left: 16px;
-}
-.channel-history article > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.channel-history article strong {
-  font-size: 11px;
-  color: #526a42;
-}
-.channel-history article small {
-  font-size: 9px;
-}
-.channel-history article p {
-  font-size: 13px;
-  color: #34472d;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  margin-top: 7px;
-}
-.channel-empty {
-  font-size: 12px;
-  padding: 20px 10px;
-}
-.team-channel form {
-  border-top: 1px solid #dfe5d5;
-  padding: 13px 15px;
-}
-.team-channel label {
-  display: block;
-  font-size: 11px;
-  margin-bottom: 8px;
-  color: #60754d;
-}
-.team-channel textarea {
-  resize: vertical;
-  min-height: 62px;
-  max-height: 110px;
-  width: 100%;
-  border: 1px solid #cbd7ba;
-  background: #fbfcf6;
-  border-radius: 6px;
-  padding: 10px;
-  font: inherit;
-  font-size: 13px;
-  color: #304b2c;
-  line-height: 1.5;
-}
-.team-channel textarea:focus-visible {
-  outline: 2px solid #789858;
-  outline-offset: 2px;
-}
-.team-channel form > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  gap: 8px;
-}
-.team-channel form small {
-  font-size: 9px;
 }
 .plate-status {
   display: flex;
@@ -2486,9 +2487,6 @@ main > footer {
 main > footer {
   padding-bottom: 65px;
 }
-.large-text .channel-history article p {
-  font-size: 16px;
-}
 @media (max-width: 600px) {
   .request-card {
     align-items: flex-start;
@@ -2510,16 +2508,6 @@ main > footer {
   .team-inbox {
     top: 4px;
     max-height: 35vh;
-  }
-  .channel-launcher {
-    right: 16px;
-    bottom: 16px;
-    padding: 12px 15px;
-  }
-  .team-channel {
-    right: 16px;
-    bottom: 73px;
-    height: min(490px, 68vh);
   }
   .plate-status {
     align-items: flex-start;
@@ -2544,6 +2532,52 @@ main > footer {
 /* Matching labels, a connecting wire, and explicit state do not rely on color alone. */
 .mission-map {
   position: relative;
+}
+.bumping-robot {
+  visibility: hidden;
+}
+.collision-motion {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 10;
+  animation: obstacle-bump 650ms ease-in-out both;
+}
+.collision-motion svg {
+  width: min(100%, 31px);
+  height: auto;
+}
+.collision-caption {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #637259;
+}
+@keyframes obstacle-bump {
+  0% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(var(--bump-x), var(--bump-y));
+  }
+  100% {
+    transform: translate(var(--return-x), var(--return-y));
+  }
+}
+.reduced-motion .collision-motion {
+  display: none;
+}
+.reduced-motion .bumping-robot {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  .collision-motion {
+    display: none;
+  }
+  .bumping-robot {
+    visibility: visible;
+  }
 }
 .plate-wire {
   position: absolute;
@@ -2701,7 +2735,6 @@ main > footer {
   margin-top: 8px;
 }
 .plate-status p:empty,
-.team-channel small:empty,
 .request-card p:empty,
 .map-meta span:empty {
   display: none;

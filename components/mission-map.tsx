@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   FLOOR,
   BASE,
@@ -23,6 +24,8 @@ export default function MissionMap({
   queue = [],
   pings = [],
   pingKind = null,
+  quiet = false,
+  reducedMotion = false,
   onPing,
 }: {
   attempt: Attempt;
@@ -31,6 +34,8 @@ export default function MissionMap({
   queue?: Direction[];
   pings?: MapPing[];
   pingKind?: string | null;
+  quiet?: boolean;
+  reducedMotion?: boolean;
   onPing?: (p: Point) => void;
 }) {
   const r = attempt.robots.find((r) => r.id === me),
@@ -38,6 +43,24 @@ export default function MissionMap({
     plan = r ? previewMission(attempt, me, queue) : null;
   const name = (id: string) =>
     members.find((m) => m.id === id)?.name || "Teammate";
+  const collisionKey = attempt.collisions?.length
+    ? `${attempt.id}:${attempt.round}`
+    : "";
+  const seenCollision = useRef(collisionKey);
+  const [bumping, setBumping] = useState<NonNullable<Attempt["collisions"]>>(
+    [],
+  );
+  useEffect(() => {
+    const fresh = collisionKey && seenCollision.current !== collisionKey;
+    seenCollision.current = collisionKey;
+    if (!fresh || reducedMotion) {
+      setBumping([]);
+      return;
+    }
+    setBumping(attempt.collisions || []);
+    const timer = setTimeout(() => setBumping([]), 700);
+    return () => clearTimeout(timer);
+  }, [collisionKey, reducedMotion]);
   return (
     <div className={`map-wrap ${pingKind ? "ping-active" : ""}`}>
       <div className="map-meta">
@@ -108,7 +131,7 @@ export default function MissionMap({
                     <span
                       key={robot.id}
                       title={name(robot.id)}
-                      className={robot.id === me ? "my-robot" : ""}
+                      className={`${robot.id === me ? "my-robot" : ""} ${bumping.some((c) => c.member === robot.id) ? "bumping-robot" : ""}`}
                     >
                       <RobotArt
                         color={members.find((m) => m.id === robot.id)?.color}
@@ -118,6 +141,28 @@ export default function MissionMap({
                   ))}
                 </span>
               )}
+              {bumping
+                .filter((c) => same(c.from, p))
+                .map((c) => (
+                  <span
+                    key={c.member}
+                    className="collision-motion"
+                    aria-hidden="true"
+                    style={
+                      {
+                        "--bump-x": `${(c.attempted.x - c.from.x) * 70}%`,
+                        "--bump-y": `${(c.attempted.y - c.from.y) * 70}%`,
+                        "--return-x": `calc(${(c.to.x - c.from.x) * 100}% + ${(c.to.x - c.from.x) * 2}px)`,
+                        "--return-y": `calc(${(c.to.y - c.from.y) * 100}% + ${(c.to.y - c.from.y) * 2}px)`,
+                      } as CSSProperties
+                    }
+                  >
+                    <RobotArt
+                      small
+                      color={members.find((m) => m.id === c.member)?.color}
+                    />
+                  </span>
+                ))}
               {ping && (
                 <span
                   className="tile-ping"
@@ -153,6 +198,12 @@ export default function MissionMap({
           );
         })}
       </div>
+      {!!attempt.collisions?.length && (
+        <p className="collision-caption" aria-live={quiet ? "off" : "polite"}>
+          {attempt.collisions.map((c) => name(c.member)).join(", ")} · Hit
+          obstacle
+        </p>
+      )}
       <div className="map-legend">
         <span>
           <i>⌂</i> Base / delivery
@@ -168,17 +219,16 @@ export default function MissionMap({
         </span>
       </div>
       {pings.length > 0 && (
-        <div className="ping-feed" aria-live="polite">
-          {pings.slice(-3).map((p) => (
+        <div className="ping-feed" aria-live={quiet ? "off" : "polite"}>
+          {pings.map((p) => (
             <p key={p.id}>
               <strong>{name(p.member)}</strong>:{" "}
               {p.kind === "meet"
                 ? "Meet here"
                 : p.kind === "help"
                   ? "Need help"
-                  : "My route"}{" "}
+                  : "Go here"}{" "}
               · column {p.at.x + 1}, row {p.at.y + 1}{" "}
-              <small>(round {p.round})</small>
             </p>
           ))}
         </div>

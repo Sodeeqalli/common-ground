@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import WorldArt, { RobotArt } from "../components/world-art";
 import MissionControl from "../components/mission-control";
-import TeamChannel from "../components/team-channel";
+import TeamRequests, { FreeChat } from "../components/team-coordination";
 import { readinessContext, type Team, type Direction } from "../shared/game";
 type View = Team & { me: string };
 type Screen = "world" | "mission";
@@ -63,7 +63,8 @@ export default function CommonGround() {
     [motion, setMotion] = useState(false),
     [quiet, setQuiet] = useState(false),
     [large, setLarge] = useState(false),
-    [sound, setSound] = useState(false);
+    [sound, setSound] = useState(false),
+    [freeChat, setFreeChat] = useState(false);
   const [launch, setLaunch] = useState(false),
     [selected, setSelected] = useState<string[]>([]),
     [queue, setQueue] = useState<Direction[]>([]),
@@ -117,6 +118,7 @@ export default function CommonGround() {
       setQuiet(!!s.quiet);
       setLarge(!!s.large);
       setSound(!!s.sound);
+      setFreeChat(!!s.freeChat);
     } catch {}
     setLoaded(true);
   }, []);
@@ -124,9 +126,9 @@ export default function CommonGround() {
     if (loaded)
       localStorage.setItem(
         "cg-settings",
-        JSON.stringify({ motion, quiet, large, sound }),
+        JSON.stringify({ motion, quiet, large, sound, freeChat }),
       );
-  }, [motion, quiet, large, sound, loaded]);
+  }, [motion, quiet, large, sound, freeChat, loaded]);
   const accept = (next: View) =>
     setTeam((old) =>
       !old || old.id !== next.id || next.version >= old.version ? next : old,
@@ -172,6 +174,14 @@ export default function CommonGround() {
   const a = team?.attempt,
     me = team?.members.find((m) => m.id === team.me),
     robot = a?.robots.find((r) => r.id === team?.me);
+  const enteredMission = useRef("");
+  useEffect(() => {
+    if (!a || ["success", "ended"].includes(a.phase)) return;
+    if (robot && (enteredMission.current !== a.id || launch))
+      setScreen("mission");
+    enteredMission.current = a.id;
+    setLaunch(false);
+  }, [a?.id, a?.phase, robot?.id, launch]);
   useEffect(() => {
     setQueue([]);
   }, [a?.id, a?.round, a?.phase]);
@@ -239,7 +249,17 @@ export default function CommonGround() {
         setScreen("mission");
         setLaunch(false);
       }
-      chime();
+      if (
+        ![
+          "signal",
+          "signal-ack",
+          "signal-reply",
+          "signal-clear",
+          "ping",
+          "message",
+        ].includes(type)
+      )
+        chime();
       return true;
     } catch (e) {
       setError(
@@ -451,7 +471,12 @@ export default function CommonGround() {
             </div>
           )}
           {team && (
-            <TeamChannel team={team} busy={busy} quiet={quiet} onAction={act} />
+            <TeamRequests
+              team={team}
+              busy={busy}
+              quiet={quiet}
+              onAction={act}
+            />
           )}
           {team?.upgradeNotice && (
             <div className="soft-note">{team.upgradeNotice}</div>
@@ -526,6 +551,8 @@ export default function CommonGround() {
           )}
           {screen === "mission" && a && team && (
             <MissionControl
+              reducedMotion={motion}
+              quiet={quiet}
               team={team}
               busy={busy}
               queue={queue}
@@ -543,6 +570,9 @@ export default function CommonGround() {
               <p>Join a team to play.</p>
               <Button onClick={launchMission}>Choose team</Button>
             </div>
+          )}
+          {team && freeChat && (
+            <FreeChat team={team} busy={busy} quiet={quiet} onAction={act} />
           )}
         </main>
       </div>
@@ -640,22 +670,26 @@ export default function CommonGround() {
             >
               <X size={20} />
             </button>
-            <h2>Choose players</h2>
-            <p>2–4 players</p>
+            <h2>
+              {team.owner === team.me ? "Choose players" : "Waiting for host"}
+            </h2>
+            {team.owner === team.me && <p>2–4 players</p>}
             {team.members.map((m) => (
               <label className="roster-choice" key={m.id}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(m.id)}
-                  disabled={m.id === team.me}
-                  onChange={(e) =>
-                    setSelected((ids) =>
-                      e.target.checked
-                        ? [...ids, m.id]
-                        : ids.filter((id) => id !== m.id),
-                    )
-                  }
-                />
+                {team.owner === team.me && (
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(m.id)}
+                    disabled={m.id === team.me}
+                    onChange={(e) =>
+                      setSelected((ids) =>
+                        e.target.checked
+                          ? [...ids, m.id]
+                          : ids.filter((id) => id !== m.id),
+                      )
+                    }
+                  />
+                )}
                 <RobotArt small color={m.color} />
                 <span>
                   {m.name}
@@ -668,9 +702,7 @@ export default function CommonGround() {
                 Invite a teammate: <strong>{team.code}</strong>
               </div>
             )}
-            {team.owner !== team.me ? (
-              <p>Waiting for the host.</p>
-            ) : (
+            {team.owner === team.me && (
               <Button
                 disabled={busy || selected.length < 2 || selected.length > 4}
                 onClick={() => act("new-mission", { roster: selected })}
@@ -707,6 +739,7 @@ export default function CommonGround() {
               ],
               ["Larger text", "", large, setLarge],
               ["Sound effects", "", sound, setSound],
+              ["Free chat", "Optional typing", freeChat, setFreeChat],
             ].map(([title, desc, on, set]) => (
               <label className="setting-row" key={String(title)}>
                 <span>
@@ -765,6 +798,7 @@ export default function CommonGround() {
               </li>
               <li>
                 1 energy per move. Start with 3; gain 3 each round. Maximum 6.
+                Staying discards unused energy.
               </li>
               <li>
                 Stand on plate A to open gate A. Leaving closes it. Holding is

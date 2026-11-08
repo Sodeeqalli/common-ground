@@ -1,6 +1,6 @@
 # Common Ground — Team specification
 
-Version 5 · 8 November 2026 · Browser game · Adults only
+Version 6 · 8 November 2026 · Browser game · Adults only
 
 ## Product and scope
 
@@ -14,9 +14,9 @@ The shipped world has one playable mission, Restore the Greenhouse. The power st
 
 - A team has a name, invite code, members, latest expedition and permanently restored regions.
 - Up to twelve members can belong to a team. The host selects two to four for an expedition, including themselves.
-- Invited members outside the expedition can watch and chat. Mission actions belong to the selected roster.
+- Invited members outside the expedition can watch. Mission actions belong to the selected roster.
 - Guest identity is remembered in this browser. Clearing browser data or leaving membership loses that identity; rejoining creates another robot. Full account recovery is not built.
-- Team progress, accepted actions, chat, requests and pings are server-backed. The local and hosted databases are separate.
+- Team progress, accepted actions, signals, requests and pings are server-backed. The local and hosted databases are separate.
 
 ## Greenhouse mission
 
@@ -49,7 +49,7 @@ Pressure plate **A** is at column 6, row 8. Matching gate **A** is at column 4, 
 
 - Each robot starts with three energy.
 - Each new round adds three energy, capped at six. Readiness acknowledgements cannot repeat this reward.
-- Each directional attempt costs one energy. Unspent energy carries over.
+- Each directional attempt costs one energy. Unspent energy carries over only when a non-empty route was submitted. Stay (including holding plate A) discards remaining energy at round resolution; the next round starts with the normal three energy. Time spent deciding or waiting for teammates has no penalty.
 - During coordination a player can give one energy to one teammate once per round, respecting the six-energy cap. Transfers conserve energy.
 - A robot can hold the plate even at zero energy. Energy transfers never deactivate it.
 - Each battery tile grants each robot one energy once per attempt, after movement. It cannot fund extra moves in that same submitted queue.
@@ -60,7 +60,7 @@ Pressure plate **A** is at column 6, row 8. Matching gate **A** is at column 4, 
 
 **Briefing → Coordination → Route planning → Resolution/review → Next coordination**
 
-Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players chat, ping, transfer energy, negotiate task handoffs and decide who will hold the plate. All ready before route planning. Changes to assignments, energy or positions reset readiness.
+Briefing happens once. Each player claims a responsibility; all ready to begin. Coordination lets players signal, ping, transfer energy, negotiate task handoffs and decide who will hold the plate. All ready before route planning. Changes to assignments, energy or positions reset readiness.
 
 Players then queue routes or choose to stay. Routes execute after everyone locks in. The server validates energy, roles, ownership and per-step plate occupancy. Resolution shows a factual event log. No one is scored for message length, tone, friendliness or number of messages.
 
@@ -68,35 +68,35 @@ All players explicitly continue to the next round. Anyone can request a break at
 
 ## Communication tools
 
-### Team chat
+### Strategy signals
 
-- Free text, one to 280 characters per message; the latest 60 messages are retained.
-- Available in the world, during missions for current team members.
-- Sender and round are shown. Text is rendered literally, never as HTML.
-- A fixed chat button indicates unread messages. There is no required script, voice channel or message score.
-- Quiet mode disables chat announcements; it does not hide actionable requests.
+Seven presets: I'll hold plate [letter]; Can you hold plate [letter]?; I'll collect; Can you take over plate [letter]?; Wait; I'm ready; I'm through. A compact A–Z selector changes the letter in plate signals; the current greenhouse map still has only plate A. Selecting a letter changes the message only, never the map. Each roster member has at most one current signal, shown inline beneath the map. A new signal replaces the previous one. Requests offer Yes/No replies, identified by player; players can change their reply. Other signals offer Got it, meaning seen. Replies never move robots, change assignments or lock readiness. Players can clear their own signal.
+
+Free chat is opt-in per browser under Settings and off by default. When enabled it appears in a collapsed, inline Free chat section. Other players may keep it off; there are no unread badges or pop-up prompts. It supports 1–280 literal characters per message, one message per two seconds, retaining 60 server-side and displaying the latest 20. Chat and signals make no sounds, even when other game effects are on. Free chat is optional for all players, with no diagnosis gate.
+
+Signals expire on the next round and new mission. Different signals are limited to one every two seconds; repeating the same signal is idempotent. No pop-ups, flashing, sounds or unread badges. Quiet mode disables live announcements while retaining visible signals and requests. No communication score.
 
 ### Map pings
 
-Choose Meet here, Need help or My route, then select a walkable tile by touch, mouse or keyboard. Both map markers and a text feed identify the sender, kind and coordinates. Recent pings cover the current and preceding round; the server retains at most twelve. A ping communicates intent; it does not move or command a teammate’s robot.
+Choose Meet here, Need help or Go here, then select a walkable tile by touch, mouse or keyboard. Map markers and a short list identify sender, kind and coordinates. One pin per player; the next replaces it, with a two-second interval between changes. Pins clear each round. A ping communicates intent; it does not move or command a teammate's robot.
 
 ### Actionable requests
 
-An energy request stays in a visible team inbox across screen changes and refreshes. The sender can cancel. Teammates can Give 1 energy during coordination, or reply Not now. The request closes when fulfilled, cancelled or all other roster members decline. A normal transfer to that requester also resolves their request. Repeated clicks cannot apply the transfer twice. Requests do not expire because another chat message arrived.
+An energy request stays in a visible team inbox across screen changes and refreshes. The sender can cancel. Teammates can Give 1 energy during coordination, or reply Not now. The request closes when fulfilled, cancelled or all other roster members decline. A normal transfer to that requester also resolves their request. Repeated clicks cannot apply the transfer twice. Requests do not expire because another signal arrived.
 
 Task offers appear in the same inbox with Accept and Decline/cancel. Only the recipient can accept. Pending task offers block readiness until resolved, because the team has not agreed on ownership.
 
-Break requests also remain visible. Quiet mode retains these mission-critical controls. New attempts clear old requests and pings while retaining team chat and world progress.
+Break requests also remain visible. Quiet mode retains these mission-critical controls. New attempts clear old requests and pings while retaining world progress.
 
 ## Presentation
 
-Only Our world and Team missions appear in navigation. Our world uses a sparse four-part illustration: restored areas have muted colour; unfinished areas are pale. Colours are accompanied by the completion count and a checkmark. No animations, flashing or celebration effects. Existing world progress is reused without resetting teams.
+Only Our world and Team missions appear in navigation. Our world uses a sparse four-part illustration: restored areas have muted colour; unfinished areas are pale. Colours are accompanied by the completion count and a checkmark. The world picture has no animations, flashing or celebration effects. Mission collisions use one subtle 650 ms bump and rollback with a small “Hit obstacle” caption, with no shake, sound or warning banner. Reduced motion shows the final position and caption without movement. Existing world progress is reused without resetting teams.
 
-Copy is limited to labels, actions, useful state and errors. Detailed mechanics are behind Rules; round events are collapsed under Round log. The earlier scenario scripts remain in content and documentation, but their UI and API route are removed.
+Copy is limited to labels, actions, useful state and errors. Detailed mechanics are behind Rules. Round log is removed from the UI; show current positions, energy, tasks, gate state and brief collision feedback. At the eight-round limit, the outcome reads “Moves ended” and “Unable to complete mission.” The earlier scenario scripts remain in content and documentation, but their UI and API route are removed.
 
 ## Comfort and inclusion
 
-Sound starts off; music is absent. Reduced motion, larger text, quiet chat announcements, untimed decisions, visible rules and route previews remain available. Communication can be short text, a ping or a structured request. There is no penalty for using supports, no forced voice and no requirement to disclose a diagnosis.
+Sound starts off; music is absent. Reduced motion, larger text, quiet signal announcements, untimed decisions, visible rules and route previews remain available. Communication can be a preset signal, a ping or a structured request. There is no penalty for using supports, no forced voice and no requirement to disclose a diagnosis.
 
 Autistic adults have different preferences. The game is intended for adults who want this style of play, not as a claim about what all autistic people enjoy. Invited non-autistic friends participate in the same reciprocal responsibilities.
 
@@ -104,13 +104,15 @@ Autistic adults have different preferences. The game is intended for adults who 
 
 React/TypeScript with the supplied Vinext/Cloudflare Worker starter. D1 stores team state and hashed guest tokens. The client polls every 1.5 seconds. Server-owned validation, optimistic versions and request identifiers protect mutations.
 
-Chat and safe phase-local actions can revalidate after a competing write. Readiness only carries over if jobs, energy and positions are unchanged. Shared decisions that no longer match the viewed state ask the player to review and retry. Successful restoration is part of the same state update as mission success.
+Signals and safe phase-local actions can revalidate after a competing write. Readiness only carries over if jobs, energy and positions are unchanged. Shared decisions that no longer match the viewed state ask the player to review and retry. Successful restoration is part of the same state update as mission success.
 
-Older active attempts are ended with an explicit upgrade notice because their previous map and relay rules cannot safely resume under the pressure-plate rules. Team identity, chat and restored regions remain. No destructive schema migration is needed.
+Older active attempts are ended with an explicit upgrade notice because their previous map and relay rules cannot safely resume under the pressure-plate rules. Team identity and restored regions remain. Old chat remains available when a player enables Free chat. The signals and energy updates preserve current pressure-plate attempts; the Stay rule takes effect on their next resolution. No destructive schema migration is needed.
+
+Selected players automatically enter a new active mission when polling receives it; any waiting dialog closes. Non-hosts cannot change the roster. Returning to Our world during an existing mission does not force repeated navigation.
 
 ## Acceptance and demonstration
 
-- Two browsers can exchange free text and see persistent energy requests, fulfilment confirmations, accepted/declined task offers and labelled map pings.
+- Two browsers can exchange and acknowledge preset signals and see persistent energy requests, fulfilment confirmations, accepted/declined task offers and labelled map pings.
 - Completed areas stay coloured after reload or replay. Practice and Race are absent.
 - A single robot cannot leave the plate and cross the closed gate alone.
 - Plate occupancy updates on each step, including arrival, departure and handoff; roster order does not affect gate access.
@@ -119,7 +121,7 @@ Older active attempts are ended with an explicit upgrade notice because their pr
 - Reconnect restores accepted state; duplicate mutation IDs do not repeat transfers.
 - A genuine full match and saved restoration are demonstrable without fabricated completion checkpoints.
 
-For judging, show the live team channel, a persistent energy request, a map ping, and a pressure-plate opening. Have the carrier cross and collect the pump while their teammate stays on the plate, then show the gate close when the last holder leaves. Explain that the resulting coordination is the practice opportunity; everyday communication improvement has not been established.
+For judging, show the strategy signals and acknowledgements, a persistent energy request, a map ping, and a pressure-plate opening. Have the carrier cross and collect the pump while their teammate stays on the plate, then show the gate close when the last holder leaves. Explain that the resulting coordination is the practice opportunity; everyday communication improvement has not been established.
 
 ## Research basis and claims
 

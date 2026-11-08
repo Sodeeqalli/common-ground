@@ -5,6 +5,10 @@ import {
   COLORS,
   FLOOR,
   same,
+  STRATEGY_SIGNALS,
+  PLATE_SIGNALS,
+  REQUEST_SIGNALS,
+  type SignalKind,
   type Team,
   type Direction,
 } from "../shared/game";
@@ -64,6 +68,8 @@ export function newTeam(
 export function normalizeTeam(team: Team): Team {
   team.energyRequests ??= [];
   team.pings ??= [];
+  team.signals ??= [];
+  team.signalSentAt ??= {};
   const a = team.attempt;
   if (a && a.rulesVersion !== 3) {
     team.upgradeNotice =
@@ -104,14 +110,20 @@ export function applyAction(
     team.attempt = makeAttempt(crypto.randomUUID(), roster);
     team.energyRequests = [];
     team.pings = [];
+    team.signals = [];
+    team.signalSentAt = {};
     delete team.upgradeNotice;
     return;
   }
   if (type === "message") {
     const text = typeof action.text === "string" ? action.text.trim() : "";
+    demand(text.length > 0 && text.length <= 280, "Write 1–280 characters.");
+    const previous = [...team.messages]
+      .reverse()
+      .find((m) => m.member === member);
     demand(
-      text.length > 0 && text.length <= 280,
-      "Write a message of 1–280 characters.",
+      Date.now() - Date.parse(previous?.at || "1970-01-01") >= 2000,
+      "Wait a moment before sending again.",
     );
     team.messages = [
       ...team.messages.slice(-59),
@@ -132,6 +144,99 @@ export function applyAction(
   );
   const r = a.robots.find((r) => r.id === member);
   demand(r, "You are not on this expedition. Join the next mission.");
+  if (
+    ["signal", "signal-ack", "signal-reply", "signal-clear", "ping"].includes(
+      type,
+    )
+  ) {
+    demand(!["success", "ended"].includes(a.phase), "This mission has ended.");
+    demand(action.round === a.round, "The round has changed. Try again.");
+  }
+  if (type === "signal") {
+    demand(
+      typeof action.kind === "string" &&
+        Object.hasOwn(STRATEGY_SIGNALS, action.kind),
+      "Choose a strategy signal.",
+    );
+    const previous = team.signals!.find(
+      (s) => s.member === member && s.attemptId === a.id && s.round === a.round,
+    );
+    const plate = PLATE_SIGNALS.includes(action.kind as string)
+      ? (action.plate ?? "A")
+      : undefined;
+    demand(
+      plate === undefined ||
+        (typeof plate === "string" && /^[A-Z]$/.test(plate)),
+      "Choose one plate letter.",
+    );
+    if (
+      previous?.kind === action.kind &&
+      (previous.plate || "A") === (plate || "A")
+    )
+      return;
+    const now = Date.now();
+    demand(
+      now - (team.signalSentAt![member] || 0) >= 2000,
+      "Wait a moment before changing your signal.",
+    );
+    team.signalSentAt![member] = now;
+    team.signals = [
+      ...team.signals!.filter(
+        (s) =>
+          s.member !== member && s.attemptId === a.id && s.round === a.round,
+      ),
+      {
+        id: crypto.randomUUID(),
+        attemptId: a.id,
+        member,
+        kind: action.kind as SignalKind,
+        round: a.round,
+        sentAt: now,
+        acknowledgedBy: [],
+        plate: plate as string | undefined,
+        responses: {},
+      },
+    ];
+    return;
+  }
+  if (type === "signal-clear") {
+    team.signals = team.signals!.filter((s) => s.member !== member);
+    return;
+  }
+  if (type === "signal-ack") {
+    const signal = team.signals!.find(
+      (s) =>
+        s.id === action.signal && s.attemptId === a.id && s.round === a.round,
+    );
+    demand(
+      signal && signal.member !== member,
+      "That teammate signal is no longer available.",
+    );
+    demand(
+      !REQUEST_SIGNALS.includes(signal.kind),
+      "Reply Yes or No to this request.",
+    );
+    signal.acknowledgedBy = [...new Set([...signal.acknowledgedBy, member])];
+    return;
+  }
+  if (type === "signal-reply") {
+    const signal = team.signals!.find(
+      (s) =>
+        s.id === action.signal && s.attemptId === a.id && s.round === a.round,
+    );
+    demand(
+      signal &&
+        signal.member !== member &&
+        REQUEST_SIGNALS.includes(signal.kind),
+      "That request is no longer available.",
+    );
+    demand(
+      action.response === "yes" || action.response === "no",
+      "Choose Yes or No.",
+    );
+    signal.responses = { ...signal.responses, [member]: action.response };
+    return;
+  }
   if (type === "retreat") {
     demand(member === team.owner, "Only the host can end this attempt.");
     demand(
@@ -159,10 +264,21 @@ export function applyAction(
       ["meet", "help", "route"].includes(action.kind as string),
       "Choose a ping type.",
     );
+    const previous = team.pings!.find(
+      (p) => p.member === member && p.attemptId === a.id && p.round === a.round,
+    );
+    if (previous && same(previous.at, at) && previous.kind === action.kind)
+      return;
+    const now = Date.now();
+    demand(
+      now - (previous?.sentAt || 0) >= 2000,
+      "Wait a moment before moving your pin.",
+    );
     team.pings = [
-      ...(team.pings || [])
-        .filter((p) => p.attemptId === a.id && p.round >= a.round - 1)
-        .slice(-11),
+      ...(team.pings || []).filter(
+        (p) =>
+          p.attemptId === a.id && p.round === a.round && p.member !== member,
+      ),
       {
         id: crypto.randomUUID(),
         attemptId: a.id,
@@ -170,6 +286,7 @@ export function applyAction(
         at: { x: at.x, y: at.y },
         kind: action.kind as "meet" | "help" | "route",
         round: a.round,
+        sentAt: now,
       },
     ];
     return;
@@ -387,6 +504,10 @@ export function applyAction(
     a.rosterReady = [...new Set([...a.rosterReady, member])];
     if (a.rosterReady.length === a.roster.length) {
       a.round++;
+      a.collisions = [];
+      team.signals = [];
+      team.signalSentAt = {};
+      team.pings = [];
       a.phase = "coordination";
       a.rosterReady = [];
       a.robots.forEach((r) => {

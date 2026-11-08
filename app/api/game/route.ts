@@ -140,7 +140,7 @@ export async function POST(req: Request) {
       body.requestId.length > 80
     )
       return reply({ error: "Missing request identifier." }, 400);
-    // Revalidate independent messages and phase-local actions after competing writes.
+    // Revalidate phase-local coordination after competing writes.
     // Readiness still requires the same assignments, energy and positions.
     const phaseLocal = [
       "brief-ready",
@@ -149,6 +149,10 @@ export async function POST(req: Request) {
       "next",
       "resume",
       "pause",
+      "signal",
+      "signal-ack",
+      "signal-reply",
+      "signal-clear",
       "message",
       "ping",
       "energy-request",

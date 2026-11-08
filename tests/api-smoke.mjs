@@ -70,14 +70,31 @@ async function together(type, args = [{}, {}]) {
   );
 }
 assert.equal((await request("invalid")).status, 401);
-await together("message", [
-  { text: "I can hold plate A." },
-  { text: "I will collect the pump." },
+await action(0, "new-mission", { roster: ids });
+await together("signal", [
+  { kind: "ask_hold", plate: "A" },
+  { kind: "collect" },
 ]);
 const history = await read(1);
-assert.equal(history.messages.length, 2);
-assert(history.messages.some((m) => m.text === "I can hold plate A."));
-await action(0, "new-mission", { roster: ids });
+assert.equal(history.signals.length, 2);
+const signal = history.signals.find((s) => s.member === ids[0]);
+assert.equal(signal.kind, "ask_hold");
+await action(1, "signal-reply", { signal: signal.id, response: "yes" });
+assert.deepEqual(
+  (await read()).signals.find((s) => s.id === signal.id).responses,
+  { [ids[1]]: "yes" },
+);
+assert.equal(
+  (await request(tokens[0], body(await read(), "message", { text: " " })))
+    .status,
+  400,
+);
+assert.deepEqual((await read()).messages, []);
+await together("message", [
+  { text: "Optional plan from Fern" },
+  { text: "Optional plan from Moss" },
+]);
+assert.equal((await read(1)).messages.length, 2);
 const snap = await read();
 const claimBody = body(snap, "claim", { objective: "pump" });
 const claim = await request(tokens[0], claimBody);
@@ -97,7 +114,7 @@ await action(0, "energy-request");
 const requestId = (await read(1)).energyRequests[0].id;
 await action(0, "energy-request");
 assert.equal((await read()).energyRequests.length, 1);
-await action(1, "message", { text: "Sending one now." });
+await action(1, "signal", { kind: "collect" });
 assert.equal((await read(1)).energyRequests[0].status, "pending");
 const oldReady = await read();
 await action(1, "give", { to: ids[0], request: requestId });
@@ -127,14 +144,15 @@ const routes = [
   [[], ["right", "right", "right", "up"]],
   [[], ["up", "down", "down"]],
   [[], ["left", "left", "left"]],
-  [["left", "left", "up", "up", "down", "down"], []],
+  [["left", "left", "up"], []],
+  [["up", "down", "down"], []],
   [["right", "right", "right"], []],
   [
     ["down", "down"],
     ["down", "down"],
   ],
 ];
-for (let round = 1; round <= 7; round++) {
+for (let round = 1; round <= 8; round++) {
   const state = await read();
   assert.equal(state.attempt.round, round);
   assert.equal(state.attempt.phase, "coordination");
@@ -146,10 +164,17 @@ for (let round = 1; round <= 7; round++) {
   const after = await read();
   assert.equal(
     gateKeys(after.attempt).length > 0,
-    [1, 4, 5, 6].includes(round),
+    [1, 4, 5, 6, 7].includes(round),
   );
   assert.equal(after.attempt.powerCharges, undefined);
-  if (round < 7) await together("next");
+  routes[round - 1].forEach((route, i) => {
+    if (!route.length) assert.equal(after.attempt.robots[i].energy, 0);
+  });
+  if (round < 8) {
+    await together("next");
+    assert.deepEqual((await read()).signals, []);
+    assert.deepEqual((await read()).pings, []);
+  }
 }
 const done = await read(),
   other = await read(1);
@@ -157,7 +182,8 @@ assert.equal(done.attempt.phase, "success");
 assert.deepEqual(gateKeys(done.attempt), []);
 assert.deepEqual(done.restored, ["greenhouse"]);
 assert.equal(other.restoredAt, done.restoredAt);
-assert.equal(done.messages.length, 3);
+assert.equal(done.messages.length, 2);
+assert.deepEqual(done.signals, []);
 await action(0, "new-mission", { roster: ids });
 assert.deepEqual((await read()).energyRequests, []);
 assert.deepEqual((await read()).pings, []);
@@ -165,5 +191,5 @@ await action(0, "retreat");
 assert.deepEqual((await read(1)).restored, ["greenhouse"]);
 assert.equal((await fetch(base + "/api/scenarios")).status, 404);
 console.log(
-  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, seven-round strategic victory, saved world, retry preservation and removal of the Practice endpoint.",
+  "PASS: two identities, concurrent signals/readiness/routes, yes/no replies, optional chat, blank-text rejection, round expiry, persistent requests and pings, consented task offers, stale-plan checks, automatic pressure-plate gate, eight-round strategic victory with no energy banking on Stay, saved world, retry preservation and removal of the Practice endpoint.",
 );

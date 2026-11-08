@@ -19,16 +19,18 @@ import {
   plateHolders,
   position,
   same,
-  previewMission,
   type Team,
   type Direction,
   type Point,
 } from "../shared/game";
 import MissionMap from "./mission-map";
+import { TeamSignals } from "./team-coordination";
 import { RobotArt } from "./world-art";
 type Props = {
   team: Team & { me: string };
   busy: boolean;
+  quiet: boolean;
+  reducedMotion: boolean;
   queue: Direction[];
   setQueue: (q: Direction[] | ((q: Direction[]) => Direction[])) => void;
   act: (
@@ -48,6 +50,8 @@ const directions = [
 export default function MissionControl({
   team,
   busy,
+  quiet,
+  reducedMotion,
   queue,
   setQueue,
   act,
@@ -101,8 +105,15 @@ export default function MissionControl({
             {a.phase === "success" ? <Sprout size={46} /> : <Home size={46} />}
           </div>
           <h2>
-            {a.phase === "success" ? "Mission complete" : "Mission ended"}
+            {a.phase === "success"
+              ? "Mission complete"
+              : a.round >= 8
+                ? "Moves ended"
+                : "Mission ended"}
           </h2>
+          {a.phase === "ended" && a.round >= 8 && (
+            <p>Unable to complete mission.</p>
+          )}
           <div className="outcome-stats">
             <span>
               <strong>
@@ -119,19 +130,6 @@ export default function MissionControl({
               robots home
             </span>
           </div>
-          {a.log.length > 0 && (
-            <details className="round-log">
-              <summary>Round log</summary>
-              {a.log.map((line, i) => (
-                <p key={i}>
-                  {team.members.reduce(
-                    (s, m) => s.replaceAll(m.id, m.name),
-                    line,
-                  )}
-                </p>
-              ))}
-            </details>
-          )}
           <button className="button primary" onClick={onWorld}>
             Our world <ArrowRight size={16} />
           </button>
@@ -171,7 +169,7 @@ export default function MissionControl({
                       ? "Meet here"
                       : kind === "help"
                         ? "Need help"
-                        : "My route"}
+                        : "Go here"}
                   </button>
                 ))}
               </div>
@@ -181,8 +179,10 @@ export default function MissionControl({
                 members={team.members}
                 queue={queue}
                 pings={(team.pings || []).filter(
-                  (p) => p.attemptId === a.id && p.round >= a.round - 1,
+                  (p) => p.attemptId === a.id && p.round === a.round,
                 )}
+                quiet={quiet}
+                reducedMotion={reducedMotion}
                 pingKind={pingKind}
                 onPing={ping}
               />
@@ -193,10 +193,16 @@ export default function MissionControl({
                     ? "Meet here"
                     : pingKind === "help"
                       ? "Need help"
-                      : "My route"}
+                      : "Go here"}
                   ”.
                 </p>
               )}
+              <TeamSignals
+                team={team}
+                busy={busy}
+                quiet={quiet}
+                onAction={act}
+              />
               <div className="crew-cards">
                 {a.robots.map((robot) => (
                   <div
@@ -447,11 +453,6 @@ export default function MissionControl({
                           Clear
                         </button>
                       </div>
-                      {previewMission(a, r.id, queue).collision && (
-                        <div className="warning">
-                          Blocked: −1 energy, back one step. Route stops.
-                        </div>
-                      )}
                       <button
                         className="button primary"
                         disabled={busy || r.ready}
@@ -482,21 +483,6 @@ export default function MissionControl({
                         /{a.objectives.length} delivered · {8 - a.round} rounds
                         left
                       </p>
-                      <details className="round-log">
-                        <summary>Round log</summary>
-                        {a.log.length ? (
-                          a.log.map((line, i) => (
-                            <p key={i}>
-                              {team.members.reduce(
-                                (s, m) => s.replaceAll(m.id, m.name),
-                                line,
-                              )}
-                            </p>
-                          ))
-                        ) : (
-                          <p>No changes.</p>
-                        )}
-                      </details>
                       {a.paused ? (
                         <>
                           <div className="soft-note">Paused</div>
@@ -536,28 +522,6 @@ export default function MissionControl({
                 >
                   <Zap size={13} />
                   {pending ? "Energy request pending" : "Request 1 energy"}
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    act("message", { text: "Not ready yet—please wait." })
-                  }
-                >
-                  Not ready yet
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    act("message", { text: "I can help. What do you need?" })
-                  }
-                >
-                  I can help
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() => act("message", { text: "Nice teamwork!" })}
-                >
-                  Nice teamwork!
                 </button>
               </div>
               <div className="bottom-controls">

@@ -42,6 +42,7 @@ export type Attempt = {
   resumes: string[];
   swap: { objective: string; from: string; to: string } | null;
   log: string[];
+  collisions?: { member: string; from: Point; attempted: Point; to: Point }[];
 };
 export type TeamMessage = {
   id?: string;
@@ -49,6 +50,32 @@ export type TeamMessage = {
   text: string;
   at?: string;
   round?: number;
+};
+export const STRATEGY_SIGNALS = {
+  hold: "I'll hold plate {plate}",
+  ask_hold: "Can you hold plate {plate}?",
+  collect: "I'll collect",
+  takeover: "Can you take over plate {plate}?",
+  wait: "Wait",
+  ready: "I'm ready",
+  through: "I'm through",
+} as const;
+export const PLATE_SIGNALS = ["hold", "ask_hold", "takeover"];
+export const REQUEST_SIGNALS = ["ask_hold", "takeover"];
+export type SignalKind = keyof typeof STRATEGY_SIGNALS;
+export function signalLabel(kind: SignalKind, plate = "A") {
+  return STRATEGY_SIGNALS[kind].replace("{plate}", plate);
+}
+export type StrategySignal = {
+  id: string;
+  attemptId: string;
+  member: string;
+  kind: SignalKind;
+  round: number;
+  sentAt: number;
+  acknowledgedBy: string[];
+  plate?: string;
+  responses?: Record<string, "yes" | "no">;
 };
 export type EnergyRequest = {
   id: string;
@@ -65,6 +92,7 @@ export type MapPing = {
   at: Point;
   kind: "meet" | "help" | "route";
   round: number;
+  sentAt?: number;
 };
 export type Team = {
   id: string;
@@ -80,6 +108,8 @@ export type Team = {
   messages: TeamMessage[];
   energyRequests?: EnergyRequest[];
   pings?: MapPing[];
+  signals?: StrategySignal[];
+  signalSentAt?: Record<string, number>;
   upgradeNotice?: string;
 };
 export const PLAYLIST = [
@@ -233,6 +263,7 @@ export function preview(robot: Robot, queue: Direction[], keys: string[]) {
 }
 export function execute(a: Attempt, sandbox = false) {
   a.log = [];
+  a.collisions = [];
   const traces: Record<string, { path: Point[]; collision: boolean }> = {};
   const earned: Record<string, number> = {};
   const stopped = new Set<string>();
@@ -254,8 +285,15 @@ export function execute(a: Attempt, sandbox = false) {
     r.cargo = obj.id;
     a.log.push(`${r.id}: Collected ${obj.name}.`);
   };
-  const block = (r: Robot, beat: number) => {
+  const block = (r: Robot, beat: number, attempted: Point) => {
+    const from = { ...position(r) };
     if (r.history.length > 1) r.history.pop();
+    a.collisions!.push({
+      member: r.id,
+      from,
+      attempted,
+      to: { ...position(r) },
+    });
     traces[r.id].collision = true;
     stopped.add(r.id);
     a.log.push(
@@ -292,14 +330,14 @@ export function execute(a: Attempt, sandbox = false) {
       if (stopped.has(r.id) || !r.queue[i] || r.energy < 1) continue;
       r.energy--;
       const next = step(position(r), r.queue[i]);
-      if (!FLOOR.some((f) => same(f, next))) block(r, i + 1);
+      if (!FLOOR.some((f) => same(f, next))) block(r, i + 1, next);
       else if (same(next, GATE)) gateEntries.push({ r, next });
       else move(r, next);
     }
     const gateOpen = open();
     for (const { r, next } of gateEntries) {
       if (gateOpen) move(r, next);
-      else block(r, i + 1);
+      else block(r, i + 1, next);
     }
     const nowOpen = open();
     if (nowOpen !== wasOpen)
@@ -309,7 +347,8 @@ export function execute(a: Attempt, sandbox = false) {
     wasOpen = nowOpen;
   }
   for (const r of a.robots) {
-    r.energy = Math.min(6, r.energy + earned[r.id]);
+    // An empty route is Stay (including holding a plate), not a way to bank energy.
+    r.energy = r.queue.length ? Math.min(6, r.energy + earned[r.id]) : 0;
     r.queue = [];
     r.ready = false;
   }
