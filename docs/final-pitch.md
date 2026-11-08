@@ -107,7 +107,7 @@ Put short author/year references on slides and full links in a final source appe
 
 ## Demo run of show
 
-**Before judging:** use a dedicated demo team and two browser identities. Two tabs at the same origin use the same identity; use separate browser profiles or the documented localhost/127.0.0.1 pair for the local demo. A phone cannot open the laptop's loopback address. The hosted Site is owner-private; confirm intended judge access separately before handing out its link.
+**Before judging:** use a dedicated demo team and two browser identities. Two tabs at the same origin use the same identity; use separate browser profiles or the documented localhost/127.0.0.1 pair for the local demo. For two devices or judges, use the public deployment at https://common-ground.sodeeqalli.workers.dev. It has a fresh, separate database, so create the demo team there rather than reusing a local invite code. The earlier managed Site remains owner-private.
 
 1. Show the team and unfinished world. Say what is saved and point out that two people take this mission together.
 2. Start Greenhouse. The second player's screen should enter the mission automatically. Choose different jobs and ready both players.

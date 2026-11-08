@@ -14,7 +14,10 @@
     "db:generate": "drizzle-kit generate",
     "test": "node scripts/test.mjs",
     "typecheck": "tsc --noEmit",
-    "test:api": "node tests/api-smoke.mjs"
+    "test:api": "node tests/api-smoke.mjs",
+    "cloudflare:check": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config wrangler.cloudflare.json --dry-run",
+    "cloudflare:migrate": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --remote --config wrangler.cloudflare.json",
+    "cloudflare:deploy": "npm run build && node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config wrangler.cloudflare.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

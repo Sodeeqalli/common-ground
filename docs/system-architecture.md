@@ -1,27 +1,29 @@
 # Common Ground — system architecture
 
-Verified against the application source and managed deployment on 8 November 2026.
+Verified against the application source and direct Cloudflare deployment on 8 November 2026.
 
 ## Deployment
 
-The current game is hosted on Cloudflare through the Sites managed deployment service. Its frontend assets, server-rendered page and backend API are deployed together; persistent game data lives in Cloudflare D1.
+The current public game is deployed directly in Sodeeq's own Cloudflare account. Its frontend assets, server-rendered page and backend API are deployed together; persistent game data lives in Cloudflare D1.
 
-- **Game URL:** https://common-ground-htc2026.sodeeqalli.chatgpt.site
-- **Hosting audience:** currently owner-private. Making the GitHub repository public did not change game access.
+- **Public game URL:** https://common-ground.sodeeqalli.workers.dev
+- **Worker:** `common-ground`; deployed version `147d3a71-b79a-4f1e-9c6b-f81381beedd2`.
+- **Account:** `9c3da6d10da778ca7bc883341b0db1d5`.
 - **Source:** https://github.com/Sodeeqalli/common-ground
-- **Database binding:** `DB`; verified live user tables: `teams`, `members`.
+- **Database:** `common-ground-db`, ID `eae92d8d-6f23-46be-ab16-b7049c4c3a80`, created in WNAM; binding `DB`; verified live user tables: `teams`, `members`.
+- **Deployment configuration:** `wrangler.cloudflare.json`; this is distinct from the generated local/Sites configuration.
 - **Local development:** `http://127.0.0.1:5173`; local data is separate from hosted data.
 
-This is managed Cloudflare hosting, not a deployment established in the user's own Cloudflare account. The checked local Wrangler session is expired. A separate account deployment needs renewed Cloudflare authentication and a real D1 binding; the generated local configuration contains a placeholder database ID and must not be deployed unchanged.
+The earlier owner-private managed preview at `https://common-ground-htc2026.sodeeqalli.chatgpt.site` remains separate. This deployment created a fresh database; it did not copy local or managed-preview teams. Use the public URL above for teammates and judges. No custom domain or automatic GitHub deployment workflow was configured.
 
 ## Runtime diagram
 
 ```mermaid
 flowchart TD
-    A[Player A browser] -->|HTTPS| Access[Managed Site access gate]
-    B[Player B browser] -->|HTTPS| Access
-    Access --> Assets[Cloudflare static assets<br/>JavaScript, CSS, images]
-    Access --> Worker[Cloudflare Worker<br/>Vinext / React page and API]
+    A[Player A browser] -->|HTTPS| Edge[common-ground.sodeeqalli.workers.dev]
+    B[Player B browser] -->|HTTPS| Edge
+    Edge --> Assets[Cloudflare static assets<br/>JavaScript, CSS, images]
+    Edge --> Worker[Cloudflare Worker: common-ground<br/>Vinext / React page and API]
     Assets --> UI[React interface in each browser]
     UI -->|GET /api/game every 1.5 seconds| Worker
     UI -->|POST /api/game<br/>action, token, version, request ID| Worker
@@ -32,7 +34,7 @@ flowchart TD
     Worker -->|Filtered team snapshot| UI
 ```
 
-The access gate also applies to browser API traffic. Lines from the UI to the Worker represent same-origin requests through that gate. In a direct public Cloudflare deployment the outer Sites gate would be absent; application guest-token checks would still protect team state and actions.
+The public deployment has no Sites access gate. Frontend and API use the same origin; application guest-token checks protect private team state and actions. D1 is accessed through the Worker's binding, not directly by browsers.
 
 There are three logical layers—frontend, application backend and database—but no requirement for three separate websites or servers. Cloudflare supports deploying Worker code and static assets together. [Cloudflare Static Assets documentation](https://developers.cloudflare.com/workers/static-assets/)
 
@@ -41,7 +43,7 @@ There are three logical layers—frontend, application backend and database—bu
 | Layer | Implementation | Responsibility |
 |---|---|---|
 | Frontend | React 19, TypeScript, Vinext/Vite build | World picture, mission board, planning controls, signals, pings, optional chat and comfort settings |
-| Hosting | Cloudflare Worker and static assets, provisioned through Sites | HTTPS delivery, frontend asset serving, page rendering and API execution |
+| Hosting | Cloudflare Worker and static assets, deployed with Wrangler | HTTPS delivery, frontend asset serving, page rendering and API execution |
 | API | `app/api/game/route.ts`, `/api/game` | Create/join teams, directory queries, authenticated reads, validate and persist actions |
 | Game service | `lib/game-server.ts` | Permissions, phase transitions, requests, signals, chat and restoration credits |
 | Deterministic engine | `shared/game.ts` | Maps, movement, energy, plate occupancy, gate crossings, collision rollback and success/failure |
@@ -102,14 +104,14 @@ Request IDs are remembered in a bounded recent list to prevent a duplicate submi
 
 | Request | Access and returned data |
 |---|---|
-| `GET /api/game?view=discover&q=...` | Application-level public directory, still subject to the hosting gate; only opted-in teams with open places, exposing ID/name/member count |
+| `GET /api/game?view=discover&q=...` | Public directory; only opted-in teams with open places, exposing ID/name/member count |
 | `POST` create/join/join-discovered | Issues a guest identity after validating the request and target team; no existing guest token needed |
 | `GET /api/game` | Bearer token required; returns that member's filtered team view |
 | `POST` mission/coordination/settings action | Bearer token required; validates membership, ownership or expedition role as appropriate |
 
 Prepared SQL parameters, bounded request bodies, message-length validation, signal/ping throttles and server-side role checks are implemented. These do not constitute a full public-community abuse-prevention system. The MVP has no moderation service, guest account recovery, comprehensive endpoint rate limiting or automatic token expiry. Optional chat is a local display preference; enabling it is not a separate permission boundary from team membership.
 
-Leaving on this device removes the local token; it does not delete the server member slot. Rejoining creates a new identity. Local, managed-hosted and any future direct-account D1 databases are distinct; this deployment work does not imply a data migration between them.
+Leaving on this device removes the local token; it does not delete the server member slot. Rejoining creates a new identity. Local, managed-hosted and direct-account D1 databases are distinct; this deployment did not migrate data between them.
 
 ## Build and deployment pipeline
 
@@ -119,18 +121,32 @@ flowchart LR
     Checkout --> Checks[Typecheck and game tests]
     Checks --> Build[Vinext / Vite production build]
     Build --> Output[dist/client assets<br/>dist/server Worker]
-    Output --> Publish[Sites version and deployment]
-    Migration[Committed Drizzle SQL migrations] --> Publish
-    Publish --> Hosted[Cloudflare runtime + D1]
+    Output --> Publish[Wrangler deploy<br/>wrangler.cloudflare.json]
+    Migration[Committed Drizzle SQL migrations] --> Migrate[Wrangler D1 migrations apply]
+    Migrate --> Database[(common-ground-db)]
+    Publish --> Hosted[Cloudflare Worker + static assets]
+    Hosted --> Database
 ```
 
-The current workflow is an explicit deployment from a verified commit, not an automatically configured GitHub Actions pipeline. Sites provisions the D1 binding and applies pending schema migrations before uploading the Worker. The schema is in `db/schema.ts`; committed SQL is under `drizzle/`. Existing migrations must not be reapplied manually or rewritten. Cloudflare's own D1 migration mechanism likewise tracks applied migrations. [D1 migrations documentation](https://developers.cloudflare.com/d1/reference/migrations/)
+The current workflow is an explicit Wrangler deployment from the verified checkout, not an automatically configured GitHub Actions pipeline. The schema is in `db/schema.ts`; committed SQL is under `drizzle/`. Wrangler applied `0000_spicy_wind_dancer.sql` to the new database and recorded it in `d1_migrations`. Future runs apply pending migrations; do not rewrite applied SQL or rerun the initial SQL manually. [D1 migrations documentation](https://developers.cloudflare.com/d1/reference/migrations/)
 
-For a direct account deployment, the equivalent path is: authenticate Wrangler → select the intended account → provision a dedicated D1 database → bind it as `DB` → apply the committed initial migration once to the new database → deploy the built Worker and assets → test the live URL using independent identities. Existing managed data should remain untouched unless a separate migration is explicitly requested.
+To redeploy from this repository with an authorized Wrangler session:
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm run cloudflare:migrate
+npm run cloudflare:deploy
+```
+
+`cloudflare:deploy` builds and uploads the Worker and frontend assets with the explicit direct-account config. `npm run cloudflare:check` performs a dry run against an existing build. Keep account/database IDs in configuration, but never commit OAuth credentials or API tokens. Anyone deploying to another account must provision their own D1 and change both IDs first. These commands target the public deployment; ordinary `npm run dev` remains local.
 
 ## Verification and limits
 
-The final release checks are documented in [release-check.md](release-check.md): 38 rule tests, complete persisted wins through both maps, concurrent updates, identity/permission checks and a full two-browser Greenhouse run. Those were local production-build tests. The current managed deployment, rendered live frontend, successful directory API read and live D1 table names were checked separately. The checked browser reported no console warnings/errors. Production verification is read-only; no live QA team was created, and this is not a new full live multiplayer playtest.
+The final release checks are documented in [release-check.md](release-check.md): 38 rule tests, complete persisted wins through both maps, concurrent updates, identity/permission checks and a full two-browser Greenhouse run. Those were local production-build tests. The full API suite also passed using the direct deployment configuration against isolated local QA storage before release.
+
+The public deployment was verified separately: Wrangler uploaded the Worker and 22-file asset set, the browser rendered both mission cards, Discover teams returned its successful empty-directory state, and remote D1 confirmed both application tables and the applied migration. The checked browser reported no console warnings/errors. Independent curl checks returned HTTP 200 for discovery and HTTP 401 for an unauthenticated private-state request, both with `Cache-Control: no-store`. A Python urllib probe received Cloudflare edge error 1010; normal browser and curl access succeeded. Production verification is read-only: automatic approval review rejected creating persistent live QA records without specific authorization, so no live QA team was created and this is not a full live multiplayer playtest.
 
 This architecture is sized for the hackathon MVP. Larger-scale work would consider measured polling load, contention between frequent team writes, account recovery, community moderation and stronger abuse controls. A WebSocket/Durable Object redesign is a possible later choice, not part of the implemented system or a requirement for demonstrating it.
 

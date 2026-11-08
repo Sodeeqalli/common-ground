@@ -30,7 +30,7 @@ The local HTTP smoke test uses two independent identities and concurrent signals
 
 Two missions are playable. Bridge and Workshop remain locked; Practice and Race are absent. Full public-account recovery, automatic matchmaking, moderation and heartbeat presence tracking are not built. “Connected” means this browser can reach the store; ready barriers wait for unready teammates, but already-submitted actions can resolve while a teammate is disconnected.
 
-The owner-private hosted preview is not a judge-accessible deployment. GitHub access is separate. There is no claim of validated therapy or real-world communication improvement, and no autistic-user outcome evaluation has been performed. Full accessibility conformance remains unverified.
+The public game is available at https://common-ground.sodeeqalli.workers.dev in the team's own Cloudflare account, with its own D1 database. The earlier managed preview remains owner-private with separate data. There is no claim of validated therapy or real-world communication improvement, and no autistic-user outcome evaluation has been performed. Full accessibility conformance remains unverified.
 
 The mural uses a built-in image-generation asset in `public/world-mural-calm.png`, described in `docs/world-art.md`. SVG clipping reveals each saved region, with a pale monochrome base for unfinished areas. No animation or extra progress storage is introduced.
 

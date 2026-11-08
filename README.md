@@ -4,6 +4,8 @@
 
 A cooperative browser game for autistic adults and invited adult friends, built for Hack the Change 2026. Teams coordinate routes, share responsibilities and retrieve components to restore a persistent shared world.
 
+**[Play Common Ground](https://common-ground.sodeeqalli.workers.dev)** — frontend, backend and D1 database hosted in our own Cloudflare account. See the [architecture and deployment guide](docs/system-architecture.md).
+
 ## Playable now
 
 - Create a named team and invite friends using a code, or opt into Discover teams so others can find and join it. Two members play each mission; up to six belong to the team and share one world. Any member can choose a partner.
@@ -54,7 +56,7 @@ Create a team, share its code, join from the second identity, then have either p
 
 Existing teams can start a new expedition after the rules upgrade. Previous restored regions remain saved. Historical chat remains available to players who opt in. The signals update preserves existing pressure-plate missions.
 
-A phone cannot access the laptop's loopback URL; a shared, accessible deployment is required for a real two-device demo. The initial hosted preview is owner-private. GitHub collaborator access and hosting audience are separate settings.
+A phone cannot access the laptop's loopback URL. Use [the public game](https://common-ground.sodeeqalli.workers.dev) for a real two-device demo. The earlier managed preview remains owner-private and has separate data. Public deployment starts with a fresh database; local team codes do not work there.
 
 Do not rerun the initial SQL against an existing database. For schema changes, edit `db/schema.ts`, run `npm run db:generate`, review the new SQL and apply only the new migration. Never rewrite an applied migration.
 

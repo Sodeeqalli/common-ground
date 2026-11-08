@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "common-ground",
+  "account_id": "9c3da6d10da778ca7bc883341b0db1d5",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "no_bundle": true,
+  "find_additional_modules": true,
+  "base_dir": "dist/server",
+  "rules": [{ "type": "ESModule", "globs": ["**/*.js", "**/*.mjs"] }],
+  "assets": { "directory": "dist/client" },
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "common-ground-db",
+      "database_id": "eae92d8d-6f23-46be-ab16-b7049c4c3a80",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}
