@@ -2,16 +2,16 @@
 
 **Different minds. A world built together.**
 
-A cooperative browser game for autistic adults and invited adult friends, built for Hack the Change 2026. Teams practise everyday conversations, share energy and retrieve components to restore a persistent shared world.
+A cooperative browser game for autistic adults and invited adult friends, built for Hack the Change 2026. Teams coordinate routes, share responsibilities and retrieve components to restore a persistent shared world.
 
 ## Playable now
 
 - Create a named team and invite friends using a code. Two to four members join an expedition; up to twelve can belong to a team.
-- **Restore the Greenhouse:** choose responsibilities, play private branching conversations, voluntarily share energy or hand off an uncollected task, preview robot routes, then execute together.
-- A shared key opens a gate on the next round. Personal batteries, a six-energy cap, one-item carrying capacity and a wall rollback make routes worth planning.
+- **Restore the Greenhouse:** choose responsibilities, plan in team chat, ping the map, share energy or hand off a task, then execute routes together.
+- Two relay charges: a stationary teammate must power the gate and pump interlock while another robot retrieves the pump. The outer route can save a return charge. Start with 3 energy; gain 3 per new round, capped at 6.
 - Deliver every required component and bring every robot home within eight rounds to permanently restore the greenhouse. Successful completion and restoration are saved together.
-- Eight adult scenarios, each with two scored decisions, multiple accepted responses, fictional replies, guided repairs and explanations. Pass earns one energy. No live AI grades players.
-- Individual **Practice** includes all eight conversations and a movement sandbox.
+- Persistent energy requests have Give / Not now / Cancel controls. Task handoffs require recipient consent. Free text chat keeps the latest 60 messages. Map pings identify their sender and location.
+- Individual **Practice** holds all eight adult conversations and an open-gate movement sandbox. It never awards mission energy or changes team progress.
 - No countdown or music. Optional sound, larger conversation text, reduced motion and quiet messages. Keyboard and touch controls; responsive phone layout.
 
 **Race and the other three regions are explicitly marked planned.** This first build includes one complete team mission. It is research-informed practice, not a validated therapy or evidence of real-world communication improvement.
@@ -47,7 +47,9 @@ npm run dev
 
 Open its printed URL. For a two-player test on one laptop, use `http://127.0.0.1:5173` for the host and `http://localhost:5173` for a teammate. They have separate browser storage but use the same local database. Alternatively, use separate browser profiles. Two tabs at the same origin share one membership.
 
-Create a team, share its code, join from the second identity, then have the host select both members and open the briefing. Claim different components and click ready on both screens.
+Create a team, share its code, join from the second identity, then have the host select both members and open the briefing. Claim different components and click ready on both screens. Agree who will operate the relay and when; powering too early wastes a finite charge.
+
+Existing teams can start a new expedition after the rules upgrade. Previous restored regions and chat remain saved.
 
 A phone cannot access the laptop's loopback URL; a shared, accessible deployment is required for a real two-device demo. The initial hosted preview is owner-private. GitHub collaborator access and hosting audience are separate settings.
 
@@ -62,18 +64,18 @@ npm run test:api  # requires the local dev server and migrated local DB; run npm
 npm run build
 ```
 
-The rule suite covers all 72 full dialogue paths, rewards, private answers, energy transfers, accepted task handoffs, pause/resume, gate timing, collisions, batteries, eight-round failure, and successful 2/3/4-player missions. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
+The rule suite covers all 72 optional dialogue paths, durable requests, chat/ping validation, consented handoffs, relay timing and charges, energy, collisions, pause/resume, old-state upgrades, real failure, and seven-round wins for 2/3/4-player teams. The HTTP smoke test creates local QA teams and checks D1 persistence, independent identities, concurrent actions, stale versions, duplicate requests and completion. It refuses non-local URLs.
 
 ## Architecture
 
 React + TypeScript on the supplied Vinext/Cloudflare Worker starter. D1 stores team state and hashed guest membership tokens. Clients poll every 1.5 seconds; mutations use server validation, version checks and request IDs. No WebSocket server, external AI service or API key is required.
 
 - `shared/game.ts`: deterministic map, route preview and movement resolution.
-- `lib/game-server.ts`: authoritative conversation, mission and reward transitions.
+- `lib/game-server.ts`: authoritative mission, chat, ping and request transitions.
 - `app/api/game/route.ts`: guest identity, D1 persistence and optimistic concurrency.
 - `app/api/scenarios/route.ts`: independent practice API.
 - `app/page.tsx`: world, mission, practice and comfort controls.
-- `components/`: SVG world/robot art and maze renderer.
+- `components/`: mission controls, team channel, interactive maze and SVG art.
 - `content/`: the eight authored adult conversations.
 
 Game-specific source was authored during the event. The supplied framework and dependencies retain their original licenses. Disclose actual AI assistance in the submission, and review the content and code as a team.

@@ -1,19 +1,14 @@
-// Run against a local, disposable D1 database: npm run test:api
+// Local-only integration fixtures; never point this at a production team.
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const {
-  BASE,
-  KEY,
-  PLAYLIST,
-  position,
-  shortestPath,
   readinessContext,
+  GENERATOR,
 } = require("../.test-build/shared/game.js");
-const { scenarios } = require("../.test-build/lib/game-server.js");
 const base = process.env.TEST_URL || "http://127.0.0.1:5173";
 if (!["localhost", "127.0.0.1"].includes(new URL(base).hostname))
-  throw new Error("This test creates fixtures. Use a local server.");
+  throw new Error("Use a local server: this test creates QA teams.");
 async function request(token, body) {
   const r = await fetch(base + "/api/game", {
     method: body ? "POST" : "GET",
@@ -25,170 +20,150 @@ async function request(token, body) {
   });
   return { status: r.status, data: await r.json() };
 }
-const created = await request(null, {
+const first = await request(null, {
   type: "create",
   alias: "QA Fern",
-  name: "API verification " + Date.now(),
+  name: "Strategy QA " + Date.now(),
 });
-assert.equal(created.status, 200, JSON.stringify(created.data));
-const tokens = [created.data.token];
-const ids = [created.data.team.me];
-const joined = await request(null, {
+assert.equal(first.status, 200, JSON.stringify(first.data));
+const second = await request(null, {
   type: "join",
   alias: "QA Moss",
-  code: created.data.team.code,
+  code: first.data.team.code,
 });
-assert.equal(joined.status, 200);
-tokens.push(joined.data.token);
-ids.push(joined.data.team.me);
+assert.equal(second.status, 200, JSON.stringify(second.data));
+const tokens = [first.data.token, second.data.token],
+  ids = [first.data.team.me, second.data.team.me];
 const read = async (i = 0) => {
   const r = await request(tokens[i]);
-  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(r.status, 200);
   return r.data;
 };
-async function action(i, type, args = {}) {
-  const view = await read(i);
-  const r = await request(tokens[i], {
+function body(v, type, args = {}) {
+  return {
     type,
-    version: view.version,
-    attemptId: view.attempt?.id,
+    version: v.version,
+    attemptId: v.attempt?.id,
+    round: v.attempt?.round,
+    phase: v.attempt?.phase,
+    readyContext: v.attempt ? readinessContext(v.attempt) : undefined,
     requestId: crypto.randomUUID(),
     ...args,
-  });
+  };
+}
+async function action(i, type, args = {}) {
+  const v = await read(i),
+    r = await request(tokens[i], body(v, type, args));
   assert.equal(r.status, 200, `${type}: ${JSON.stringify(r.data)}`);
   return r.data;
 }
-assert.equal((await read(1)).members.length, 2);
+async function together(type, args = [{}, {}]) {
+  const v = await read();
+  const result = await Promise.all(
+    tokens.map((token, i) => request(token, body(v, type, args[i]))),
+  );
+  assert.deepEqual(
+    result.map((r) => r.status),
+    [200, 200],
+    JSON.stringify(result),
+  );
+}
 assert.equal((await request("invalid")).status, 401);
+await together("message", [
+  { text: "I can run the relay." },
+  { text: "I will collect the pump." },
+]);
+const history = await read(1);
+assert.equal(history.messages.length, 2);
+assert(history.messages.some((m) => m.text === "I can run the relay."));
 await action(0, "new-mission", { roster: ids });
 const snap = await read();
-const stale = await request(tokens[0], {
-  type: "claim",
-  objective: "pump",
-  version: snap.version - 1,
-  attemptId: snap.attempt.id,
-  requestId: crypto.randomUUID(),
-});
-assert.equal(stale.status, 409);
-const duplicateId = crypto.randomUUID();
-const claimBody = {
-  type: "claim",
-  objective: "pump",
-  version: snap.version,
-  attemptId: snap.attempt.id,
-  requestId: duplicateId,
-};
+const claimBody = body(snap, "claim", { objective: "pump" });
 const claim = await request(tokens[0], claimBody);
 assert.equal(claim.status, 200);
 const repeated = await request(tokens[0], claimBody);
-assert.equal(repeated.status, 200);
 assert.equal(repeated.data.version, claim.data.version);
+const stale = await request(
+  tokens[1],
+  body(snap, "claim", { objective: "controller" }),
+);
+assert.equal(stale.status, 409);
 await action(1, "claim", { objective: "controller" });
-for (let i = 0; i < 2; i++) await action(i, "brief-ready");
-// Independent private answers should both succeed; the server revalidates after a competing write.
-const before = await read();
-const responses = await Promise.all(
-  tokens.map((token, i) =>
-    request(token, {
-      type: "answer",
-      choice: "AE-01-D1-C1",
-      version: before.version,
-      attemptId: before.attempt.id,
-      requestId: crypto.randomUUID(),
-    }),
-  ),
+await together("brief-ready");
+assert.equal((await read()).attempt.phase, "coordination");
+assert.equal((await read()).scenario, undefined);
+await action(0, "energy-request");
+const requestId = (await read(1)).energyRequests[0].id;
+await action(0, "energy-request");
+assert.equal((await read()).energyRequests.length, 1);
+await action(1, "message", { text: "Sending one now." });
+assert.equal((await read(1)).energyRequests[0].status, "pending");
+const oldReady = await read();
+await action(1, "give", { to: ids[0], request: requestId });
+const changedReady = await request(tokens[0], body(oldReady, "coord-ready"));
+assert.equal(changedReady.status, 409);
+assert.equal((await read()).energyRequests[0].status, "fulfilled");
+const duplicate = await request(
+  tokens[1],
+  body(await read(1), "give", { to: ids[0], request: requestId }),
 );
-assert.deepEqual(
-  responses.map((r) => r.status),
-  [200, 200],
-);
-// A repeated choice with a fresh request ID must not pay twice or advance again.
-const answerAgain = await request(tokens[0], {
-  type: "answer",
-  choice: "AE-01-D1-C1",
-  version: before.version,
-  attemptId: before.attempt.id,
-  requestId: crypto.randomUUID(),
-});
-assert.equal(answerAgain.status, 400);
-let completed;
-for (let round = 1; round <= 8; round++) {
-  for (let i = 0; i < 2; i++) {
-    let v = await read(i);
-    while (!v.attempt.robots.find((r) => r.id === ids[i]).dialogue.done) {
-      const s = scenarios.find((s) => s.id === PLAYLIST[round - 1]);
-      const r = v.attempt.robots.find((r) => r.id === ids[i]);
-      const n = s.nodes[r.dialogue.node];
-      const choice = n.choices.find((c) => c.credit === 1) || n.choices[0];
-      v = await action(i, "answer", { choice: choice.id });
-    }
-  }
-  const privacy = await read(1);
-  assert.deepEqual(privacy.attempt.robots[0].dialogue.transcript, []);
-  assert.deepEqual(privacy.attempt.robots[0].queue, []);
-  if (round === 1) {
-    const oldPlan = await read();
-    await action(1, "give", { to: ids[0] });
-    const staleReady = await request(tokens[0], {
-      type: "coord-ready",
-      version: oldPlan.version,
-      attemptId: oldPlan.attempt.id,
-      round: oldPlan.attempt.round,
-      phase: oldPlan.attempt.phase,
-      readyContext: readinessContext(oldPlan.attempt),
-      requestId: crypto.randomUUID(),
-    });
-    assert.equal(
-      staleReady.status,
-      409,
-      "changed energy must be reviewed before readying",
+assert.equal(duplicate.status, 400);
+// Return one energy so the route fixture starts with the ordinary 3/3 budget.
+await action(0, "give", { to: ids[1] });
+await action(0, "ping", { at: GENERATOR, kind: "meet" });
+const ping = (await read(1)).pings[0];
+assert.equal(ping.member, ids[0]);
+assert.deepEqual(ping.at, GENERATOR);
+await action(0, "swap-request", { objective: "pump", to: ids[1] });
+assert.equal((await read(1)).attempt.swap.from, ids[0]);
+await action(1, "swap-answer", { accept: false });
+assert.equal((await read()).attempt.swap, null);
+const routes = [
+  [
+    ["up", "up", "left"],
+    ["up", "up"],
+  ],
+  [[], ["right", "right", "right", "up"]],
+  [[], ["up", "down", "down"]],
+  [[], ["left", "left", "left"]],
+  [["left", "left", "up", "up", "down", "down"], []],
+  [["right", "right", "right"], []],
+  [
+    ["down", "down"],
+    ["down", "down"],
+  ],
+];
+for (let round = 1; round <= 7; round++) {
+  const state = await read();
+  assert.equal(state.attempt.round, round);
+  assert.equal(state.attempt.phase, "coordination");
+  if ([5, 6].includes(round)) await action(1, "power", { on: true });
+  await together("coord-ready");
+  if (round === 5) {
+    const invalid = await request(
+      tokens[1],
+      body(await read(1), "moves", { moves: ["down"] }),
     );
+    assert.equal(invalid.status, 400);
   }
-  const readySnapshot = await read();
-  const acknowledgements = await Promise.all(
-    tokens.map((token) =>
-      request(token, {
-        type: "coord-ready",
-        version: readySnapshot.version,
-        attemptId: readySnapshot.attempt.id,
-        round: readySnapshot.attempt.round,
-        phase: readySnapshot.attempt.phase,
-        readyContext: readinessContext(readySnapshot.attempt),
-        requestId: crypto.randomUUID(),
-      }),
-    ),
+  await together(
+    "moves",
+    routes[round - 1].map((moves) => ({ moves })),
   );
-  assert.deepEqual(
-    acknowledgements.map((r) => r.status),
-    [200, 200],
-  );
-  for (let i = 0; i < 2; i++) {
-    const v = await read(i),
-      a = v.attempt,
-      r = a.robots.find((r) => r.id === ids[i]);
-    const obj = a.objectives.find(
-      (o) => o.owner === ids[i] && o.status === "waiting",
-    );
-    let target = r.cargo || !obj ? BASE : obj.at;
-    if (round === 1) target = KEY;
-    const path = shortestPath(position(r), target, a.keys);
-    await action(i, "moves", { moves: path.slice(0, r.energy) });
-  }
-  completed = await read();
-  if (completed.attempt.phase === "success") break;
-  if (completed.attempt.phase === "round-end")
-    for (let i = 0; i < 2; i++) await action(i, "next");
+  if (round < 7) await together("next");
 }
-assert.equal(completed.attempt.phase, "success");
-assert.deepEqual(completed.restored, ["greenhouse"]);
-const persisted = await read(1);
-assert.equal(persisted.restoredAt, completed.restoredAt);
-assert.deepEqual(persisted.restored, ["greenhouse"]);
-// New attempt and retreat do not erase the restored region.
+const done = await read(),
+  other = await read(1);
+assert.equal(done.attempt.phase, "success");
+assert.equal(done.attempt.powerCharges, 0);
+assert.deepEqual(done.restored, ["greenhouse"]);
+assert.equal(other.restoredAt, done.restoredAt);
+assert.equal(done.messages.length, 3);
 await action(0, "new-mission", { roster: ids });
+assert.deepEqual((await read()).energyRequests, []);
+assert.deepEqual((await read()).pings, []);
 await action(0, "retreat");
-assert.deepEqual((await read()).restored, ["greenhouse"]);
-// Practice serves exactly eight scenarios and does not expose grading on choices.
+assert.deepEqual((await read(1)).restored, ["greenhouse"]);
 const catalog = await (await fetch(base + "/api/scenarios")).json();
 assert.equal(catalog.length, 8);
 const practice = await (
@@ -199,6 +174,7 @@ const practice = await (
   })
 ).json();
 assert(practice.node.choices.every((c) => !("credit" in c)));
+assert.deepEqual((await read()).restored, ["greenhouse"]);
 console.log(
-  "PASS: two independent identities, D1 joins, stale-version rejection, duplicate-click idempotency, concurrent actions, private answers, full mission completion, saved world, retry preservation, eight practice scenarios.",
+  "PASS: two identities, concurrent chat/readiness/routes, persistent requests and pings, consented task offers, stale-plan checks, relay constraint, seven-round strategic victory, saved world, retry preservation and eight independent practice scenarios.",
 );

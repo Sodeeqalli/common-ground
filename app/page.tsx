@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import WorldArt, { RobotArt } from "../components/world-art";
 import MissionMap from "../components/mission-map";
+import MissionControl from "../components/mission-control";
+import TeamChannel from "../components/team-channel";
 import {
   BASE,
   position,
@@ -254,7 +256,7 @@ export default function CommonGround() {
     } catch {}
   }
   async function act(type: string, extra: Record<string, unknown> = {}) {
-    if (!team || busy) return;
+    if (!team || busy) return false;
     setBusy(true);
     setError("");
     try {
@@ -290,10 +292,12 @@ export default function CommonGround() {
         setLaunch(false);
       }
       chime();
+      return true;
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Unable to update the mission.",
       );
+      return false;
     } finally {
       setBusy(false);
     }
@@ -334,7 +338,12 @@ export default function CommonGround() {
     setLaunch(true);
   }
   function add(dir: Direction) {
-    if (robot && !robot.ready && queue.length < robot.energy)
+    if (
+      robot &&
+      !robot.ready &&
+      a?.powerBy !== team?.me &&
+      queue.length < robot.energy
+    )
       setQueue((q) => [...q, dir]);
   }
   useEffect(() => {
@@ -537,6 +546,12 @@ export default function CommonGround() {
               </button>
             </div>
           )}
+          {team && (
+            <TeamChannel team={team} busy={busy} quiet={quiet} onAction={act} />
+          )}
+          {team?.upgradeNotice && (
+            <div className="soft-note">{team.upgradeNotice}</div>
+          )}
           {error && (
             <div role="alert" className="alert">
               <span>{error}</span>
@@ -608,8 +623,8 @@ export default function CommonGround() {
                   </div>
                   <h2>Bring the greenhouse back.</h2>
                   <p>
-                    Gather the missing components, share a little energy, and
-                    help everyone find their way home.
+                    Plan the relay, share responsibilities, and retrieve the
+                    missing components before eight rounds run out.
                   </p>
                   <div className="pills">
                     <span>
@@ -687,705 +702,16 @@ export default function CommonGround() {
             </>
           )}
           {screen === "mission" && a && team && (
-            <>
-              <div className="mission-header">
-                <div>
-                  <div className="eyebrow">TEAM MISSION 01</div>
-                  <h1>Restore the greenhouse</h1>
-                  <p>Bring every component home. Bring every teammate home.</p>
-                </div>
-                <button
-                  className="button outline compact"
-                  onClick={() => setRules(true)}
-                >
-                  Mission rules
-                </button>
-              </div>
-              <div className="phase-track">
-                {[
-                  "Briefing",
-                  "Conversation",
-                  "Coordinate",
-                  "Plan route",
-                  "Round complete",
-                ].map((label, i) => {
-                  const phases = [
-                    "briefing",
-                    "conversation",
-                    "coordination",
-                    "planning",
-                    "round-end",
-                  ];
-                  return (
-                    <span
-                      key={label}
-                      className={a.phase === phases[i] ? "current" : ""}
-                    >
-                      <i>{i + 1}</i>
-                      {label}
-                    </span>
-                  );
-                })}
-                <strong>ROUND {a.round} / 8</strong>
-              </div>
-              {a.phase === "success" || a.phase === "ended" ? (
-                <section className="outcome">
-                  <div className="outcome-icon">
-                    {a.phase === "success" ? (
-                      <Sprout size={46} />
-                    ) : (
-                      <Home size={46} />
-                    )}
-                  </div>
-                  <div className="eyebrow">
-                    {a.phase === "success"
-                      ? "SAVED TO YOUR TEAM’S WORLD"
-                      : "THE EXPEDITION HAS ENDED"}
-                  </div>
-                  <h2>
-                    {a.phase === "success"
-                      ? "Something grew here.\nBecause of all of you."
-                      : "Home for now.\nAnother route awaits."}
-                  </h2>
-                  <p>
-                    {a.phase === "success"
-                      ? "Every component delivered. Every robot home. Your greenhouse is permanently restored."
-                      : "The attempt has ended. Your team’s previously restored places are safe. You can regroup and try again."}
-                  </p>
-                  <div className="outcome-stats">
-                    <span>
-                      <strong>
-                        {
-                          a.objectives.filter((o) => o.status === "delivered")
-                            .length
-                        }
-                        /{a.objectives.length}
-                      </strong>
-                      components delivered
-                    </span>
-                    <span>
-                      <strong>
-                        {a.robots.filter((r) => same(position(r), BASE)).length}
-                        /{a.roster.length}
-                      </strong>
-                      robots home
-                    </span>
-                  </div>
-                  <Button onClick={() => setScreen("world")}>
-                    See our world <ArrowRight size={16} />
-                  </Button>
-                </section>
-              ) : (
-                <div className="mission-layout">
-                  <div className="board-column">
-                    <MissionMap
-                      attempt={a}
-                      members={team.members}
-                      me={team.me}
-                      queue={queue}
-                    />
-                    <div className="crew-cards">
-                      {a.robots.map((r) => {
-                        const m = team.members.find((m) => m.id === r.id)!;
-                        return (
-                          <div
-                            key={r.id}
-                            className={`crew-card ${r.id === team.me ? "you" : ""}`}
-                          >
-                            <RobotArt color={m.color} small />
-                            <div>
-                              <strong>
-                                {m.name}
-                                {r.id === team.me ? " · you" : ""}
-                              </strong>
-                              <small>
-                                {r.cargo
-                                  ? a.objectives.find((o) => o.id === r.cargo)
-                                      ?.name
-                                  : same(position(r), BASE)
-                                    ? "At base"
-                                    : "On the route"}
-                              </small>
-                            </div>
-                            <b>ϟ {r.energy}</b>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="objectives">
-                      <h3>Our responsibilities</h3>
-                      {a.objectives.map((o) => (
-                        <div key={o.id}>
-                          <span
-                            className={`objective-icon ${o.status === "delivered" ? "complete" : ""}`}
-                          >
-                            {o.status === "delivered" ? (
-                              <Check size={15} />
-                            ) : (
-                              o.icon
-                            )}
-                          </span>
-                          <span>
-                            <strong>{o.name}</strong>
-                            <small>
-                              {team.members.find((m) => m.id === o.owner)
-                                ?.name || "Unclaimed"}
-                            </small>
-                          </span>
-                          <em>
-                            {o.status === "delivered"
-                              ? "Delivered"
-                              : o.status === "carried"
-                                ? "On the way"
-                                : "To collect"}
-                          </em>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <section className="action-panel">
-                    {!robot ? (
-                      <>
-                        <h2>You’re watching this expedition.</h2>
-                        <p>Your team can include you in the next mission.</p>
-                      </>
-                    ) : (
-                      <>
-                        {a.phase === "briefing" && (
-                          <>
-                            <div className="eyebrow">LET’S MAKE A PLAN</div>
-                            <h2>Choose your responsibility.</h2>
-                            <p>
-                              Each robot brings one component back. You can
-                              share energy and open the gate for everyone.
-                            </p>
-                            <div className="job-list">
-                              {a.objectives.map((o) => (
-                                <button
-                                  key={o.id}
-                                  disabled={busy || !!o.owner}
-                                  className={
-                                    o.owner === team.me ? "selected" : ""
-                                  }
-                                  onClick={() =>
-                                    act("claim", { objective: o.id })
-                                  }
-                                >
-                                  <span className="job-symbol">{o.icon}</span>
-                                  <span>
-                                    <strong>{o.name}</strong>
-                                    <small>
-                                      {o.owner
-                                        ? team.members.find(
-                                            (m) => m.id === o.owner,
-                                          )?.name
-                                        : "Available to claim"}
-                                    </small>
-                                  </span>
-                                  {o.owner === team.me ? (
-                                    <CheckCircle2 size={18} />
-                                  ) : (
-                                    <Plus size={18} />
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                            {a.objectives.some((o) => o.owner === team.me) && (
-                              <button
-                                className="text-button"
-                                disabled={busy}
-                                onClick={() => act("release")}
-                              >
-                                Choose a different job
-                              </button>
-                            )}
-                            <div className="soft-note">
-                              Your key opens the shared gate{" "}
-                              <strong>next round</strong>. Collected components
-                              must be brought back to the home tile.
-                            </div>
-                            <Button
-                              disabled={
-                                busy ||
-                                a.objectives.some((o) => !o.owner) ||
-                                a.rosterReady.includes(team.me)
-                              }
-                              onClick={() => act("brief-ready")}
-                            >
-                              {a.rosterReady.includes(team.me)
-                                ? "Waiting for the team…"
-                                : "Ready for the expedition"}{" "}
-                              <ArrowRight size={16} />
-                            </Button>
-                            <p className="tiny">
-                              {a.rosterReady.length}/{a.roster.length} ready ·
-                              Eight rounds, at your own pace.
-                            </p>
-                          </>
-                        )}
-                        {a.phase === "conversation" && team.scenario && (
-                          <>
-                            <div className="eyebrow">A MOMENT TO PRACTISE</div>
-                            <h2>{team.scenario.title}</h2>
-                            <span className="skill-label">
-                              {team.scenario.skill}
-                            </span>
-                            <p>{team.scenario.context}</p>
-                            <div className="goal">
-                              <strong>Your goal</strong>
-                              <p>{team.scenario.goal}</p>
-                            </div>
-                            <div className="dialogue-thread">
-                              <blockquote>
-                                {team.scenario.openingLine}
-                              </blockquote>
-                              {robot.dialogue.transcript.map((t, i) => (
-                                <div
-                                  key={i}
-                                  className={`speech ${t.who === "You" ? "your-speech" : ""}`}
-                                >
-                                  <small>{t.who}</small>
-                                  <p>{t.text}</p>
-                                </div>
-                              ))}
-                            </div>
-                            {robot.dialogue.feedback && (
-                              <div className="feedback">
-                                <Leaf size={16} />
-                                <p>{robot.dialogue.feedback}</p>
-                              </div>
-                            )}
-                            {robot.dialogue.done ? (
-                              <>
-                                <h3>Your energy is ready.</h3>
-                                <p>
-                                  The others are finishing their conversations.
-                                  Your answers stay private.
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                <h3>
-                                  {team.node?.type === "repair"
-                                    ? "You can clarify your message."
-                                    : "What do you say next?"}
-                                </h3>
-                                <div className="choices">
-                                  {team.node?.choices?.map((c) => (
-                                    <button
-                                      disabled={busy}
-                                      key={c.id}
-                                      onClick={() =>
-                                        act("answer", { choice: c.id })
-                                      }
-                                    >
-                                      {c.text}
-                                      <ChevronRight size={16} />
-                                    </button>
-                                  ))}
-                                </div>
-                                <button
-                                  className="text-button muted"
-                                  disabled={busy}
-                                  onClick={() => act("pass")}
-                                >
-                                  Pass this conversation · earn 1 energy
-                                </button>
-                              </>
-                            )}
-                          </>
-                        )}
-                        {a.phase === "coordination" && (
-                          <>
-                            <div className="eyebrow">
-                              MAKE ROOM FOR EACH OTHER
-                            </div>
-                            <h2>A little help goes a long way.</h2>
-                            <p>
-                              You have <strong>{robot.energy} energy</strong>.
-                              You can give one to a teammate before planning
-                              your route.
-                            </p>
-                            {robot.dialogue.feedback && (
-                              <details>
-                                <summary>
-                                  Your conversation and feedback
-                                </summary>
-                                <div className="dialogue-thread">
-                                  {robot.dialogue.transcript.map((t, i) => (
-                                    <div className="speech" key={i}>
-                                      <small>{t.who}</small>
-                                      <p>{t.text}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                                <p>{robot.dialogue.feedback}</p>
-                                {team.node?.type === "terminal" && (
-                                  <>
-                                    <p>{team.node.text}</p>
-                                    <blockquote>{team.node.phrase}</blockquote>
-                                  </>
-                                )}
-                              </details>
-                            )}
-                            <div className="give-list">
-                              {a.robots
-                                .filter((r) => r.id !== team.me)
-                                .map((r) => (
-                                  <div key={r.id}>
-                                    <span>
-                                      <strong>
-                                        {
-                                          team.members.find(
-                                            (m) => m.id === r.id,
-                                          )?.name
-                                        }
-                                      </strong>
-                                      <small>ϟ {r.energy} / 6 energy</small>
-                                    </span>
-                                    <Button
-                                      kind="outline"
-                                      disabled={
-                                        busy ||
-                                        robot.donated ||
-                                        robot.energy < 1 ||
-                                        r.energy >= 6
-                                      }
-                                      onClick={() => act("give", { to: r.id })}
-                                    >
-                                      {robot.donated ? "Shared" : "Give 1"}{" "}
-                                      <Plus size={13} />
-                                    </Button>
-                                  </div>
-                                ))}
-                            </div>
-                            {a.swap ? (
-                              <div className="soft-note">
-                                <p>
-                                  {
-                                    team.members.find(
-                                      (m) => m.id === a.swap!.from,
-                                    )?.name
-                                  }{" "}
-                                  offered{" "}
-                                  {
-                                    a.objectives.find(
-                                      (o) => o.id === a.swap!.objective,
-                                    )?.name
-                                  }{" "}
-                                  to{" "}
-                                  {
-                                    team.members.find(
-                                      (m) => m.id === a.swap!.to,
-                                    )?.name
-                                  }
-                                  .
-                                </p>
-                                {a.swap.to === team.me && (
-                                  <Button
-                                    onClick={() =>
-                                      act("swap-answer", { accept: true })
-                                    }
-                                    disabled={busy}
-                                  >
-                                    Accept task
-                                  </Button>
-                                )}
-                                {[a.swap.from, a.swap.to].includes(team.me) && (
-                                  <button
-                                    className="text-button"
-                                    disabled={busy}
-                                    onClick={() =>
-                                      act("swap-answer", { accept: false })
-                                    }
-                                  >
-                                    Decline / cancel
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              a.objectives
-                                .filter(
-                                  (o) =>
-                                    o.owner === team.me &&
-                                    o.status === "waiting",
-                                )
-                                .map((o) => (
-                                  <details key={o.id}>
-                                    <summary>
-                                      Offer your {o.name.toLowerCase()} task
-                                    </summary>
-                                    <p>
-                                      Only uncollected tasks can be swapped.
-                                      Your teammate must accept.
-                                    </p>
-                                    {a.robots
-                                      .filter((r) => r.id !== team.me)
-                                      .map((r) => (
-                                        <button
-                                          className="text-button"
-                                          disabled={busy}
-                                          key={r.id}
-                                          onClick={() =>
-                                            act("swap-request", {
-                                              objective: o.id,
-                                              to: r.id,
-                                            })
-                                          }
-                                        >
-                                          Offer to{" "}
-                                          {
-                                            team.members.find(
-                                              (m) => m.id === r.id,
-                                            )?.name
-                                          }
-                                        </button>
-                                      ))}
-                                  </details>
-                                ))
-                            )}
-                            <Button
-                              disabled={
-                                busy ||
-                                !!a.swap ||
-                                a.rosterReady.includes(team.me)
-                              }
-                              onClick={() => act("coord-ready")}
-                            >
-                              {a.rosterReady.includes(team.me)
-                                ? "Waiting for the team…"
-                                : "Ready to plan my route"}
-                              <ArrowRight size={16} />
-                            </Button>
-                            <p className="tiny">
-                              {a.rosterReady.length}/{a.roster.length} ready. A
-                              transfer resets readiness so everyone can check
-                              their energy.
-                            </p>
-                          </>
-                        )}
-                        {a.phase === "planning" && (
-                          <>
-                            <div className="eyebrow">YOUR ROUTE, YOUR PACE</div>
-                            <h2>Where will you go?</h2>
-                            <p>
-                              Queue up to <strong>{robot.energy} moves</strong>.
-                              Inspect the preview before locking in. Unspent
-                              energy carries over.
-                            </p>
-                            <div className="energy-display">
-                              <span>AVAILABLE ENERGY</span>
-                              <strong>
-                                ϟ {robot.energy}
-                                <small> / 6</small>
-                              </strong>
-                            </div>
-                            <div className="direction-pad">
-                              {directions.map((d) => (
-                                <button
-                                  key={d.dir}
-                                  className={`dir-${d.dir}`}
-                                  aria-label={`Queue ${d.dir}`}
-                                  disabled={
-                                    busy ||
-                                    robot.ready ||
-                                    queue.length >= robot.energy
-                                  }
-                                  onClick={() => add(d.dir)}
-                                >
-                                  <d.icon size={23} />
-                                </button>
-                              ))}
-                            </div>
-                            <div
-                              className="move-queue"
-                              aria-label="Planned moves"
-                            >
-                              {queue.length ? (
-                                queue.map((d, i) => {
-                                  const D = directions.find(
-                                    (x) => x.dir === d,
-                                  )!;
-                                  return (
-                                    <span key={i}>
-                                      <D.icon size={19} />
-                                      <small>{i + 1}</small>
-                                    </span>
-                                  );
-                                })
-                              ) : (
-                                <p>
-                                  No moves queued. You can save your energy.
-                                </p>
-                              )}
-                            </div>
-                            <div className="queue-tools">
-                              <button
-                                className="text-button"
-                                disabled={robot.ready || !queue.length}
-                                onClick={() => setQueue((q) => q.slice(0, -1))}
-                              >
-                                <Undo2 size={14} /> Undo
-                              </button>
-                              <button
-                                className="text-button"
-                                disabled={robot.ready || !queue.length}
-                                onClick={() => setQueue([])}
-                              >
-                                Clear
-                              </button>
-                            </div>
-                            {preview(robot, queue, a.keys).collision && (
-                              <div className="warning">
-                                Blocked route: the attempted move costs 1
-                                energy, rolls back one step and cancels later
-                                moves. Edit your route to avoid it.
-                              </div>
-                            )}
-                            <Button
-                              disabled={busy || robot.ready}
-                              onClick={() => act("moves", { moves: queue })}
-                            >
-                              {robot.ready
-                                ? "Route locked · waiting…"
-                                : queue.length
-                                  ? "Lock in my route"
-                                  : "Stay here & save energy"}
-                              <Check size={16} />
-                            </Button>
-                            <p className="tiny">
-                              {a.robots.filter((r) => r.ready).length}/
-                              {a.roster.length} routes ready. Use the direction
-                              buttons, or arrow keys outside text fields and
-                              buttons.
-                            </p>
-                          </>
-                        )}
-                        {a.phase === "round-end" && (
-                          <>
-                            <div className="eyebrow">
-                              A LITTLE CLOSER, TOGETHER
-                            </div>
-                            <h2>Round {a.round} complete.</h2>
-                            <p>
-                              {
-                                a.objectives.filter(
-                                  (o) => o.status === "delivered",
-                                ).length
-                              }{" "}
-                              of {a.objectives.length} components are home.
-                            </p>
-                            <div className="round-log">
-                              {a.log.length ? (
-                                a.log.map((l, i) => (
-                                  <p key={i}>
-                                    {team.members.reduce(
-                                      (text, m) => text.replace(m.id, m.name),
-                                      l,
-                                    )}
-                                  </p>
-                                ))
-                              ) : (
-                                <p>
-                                  Your routes are saved. Take a moment to look
-                                  at what comes next.
-                                </p>
-                              )}
-                            </div>
-                            {a.paused ? (
-                              <>
-                                <div className="soft-note">
-                                  <Pause size={18} /> The team is taking a
-                                  break. There is no countdown.
-                                </div>
-                                <Button
-                                  disabled={busy || a.resumes.includes(team.me)}
-                                  onClick={() => act("resume")}
-                                >
-                                  {a.resumes.includes(team.me)
-                                    ? "Waiting for everyone…"
-                                    : "I’m ready to resume"}
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                disabled={
-                                  busy || a.rosterReady.includes(team.me)
-                                }
-                                onClick={() => act("next")}
-                              >
-                                {a.rosterReady.includes(team.me)
-                                  ? "Waiting for the team…"
-                                  : "Continue to next round"}
-                                <ArrowRight size={16} />
-                              </Button>
-                            )}
-                            <p className="tiny">
-                              Your progress is saved on the server.
-                            </p>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </section>
-                </div>
-              )}
-              {!["success", "ended"].includes(a.phase) && robot && (
-                <div className="mission-bottom">
-                  {!quiet && (
-                    <div className="quick-messages">
-                      {[
-                        "I need a moment.",
-                        "Could I have one energy?",
-                        "I can share one.",
-                        "Nice teamwork!",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          disabled={busy}
-                          onClick={() => act("message", { text: t })}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="bottom-controls">
-                    <button
-                      className="text-button"
-                      disabled={busy || a.pauseRequested}
-                      onClick={() => act("pause")}
-                    >
-                      <Pause size={14} />
-                      {a.pauseRequested
-                        ? "Break requested"
-                        : "Break after this round"}
-                    </button>
-                    {team.owner === team.me && (
-                      <button
-                        className="text-button muted"
-                        onClick={() => setRetreat(true)}
-                      >
-                        End this attempt
-                      </button>
-                    )}
-                  </div>
-                  {!quiet && team.messages.length > 0 && (
-                    <p className="last-message">
-                      <strong>
-                        {
-                          team.members.find(
-                            (m) => m.id === team.messages.at(-1)?.member,
-                          )?.name
-                        }
-                        :
-                      </strong>{" "}
-                      {team.messages.at(-1)?.text}
-                    </p>
-                  )}
-                </div>
-              )}
-            </>
+            <MissionControl
+              team={team}
+              busy={busy}
+              queue={queue}
+              setQueue={setQueue}
+              act={act}
+              onRules={() => setRules(true)}
+              onRetreat={() => setRetreat(true)}
+              onWorld={() => setScreen("world")}
+            />
           )}
           {screen === "mission" && !a && (
             <div className="empty-state">
@@ -1579,7 +905,7 @@ export default function CommonGround() {
               ["Reduce motion", "Keep transitions simple.", motion, setMotion],
               [
                 "Quiet mode",
-                "Hide optional teammate messages.",
+                "Silence chat announcements. Requests stay visible.",
                 quiet,
                 setQuiet,
               ],
@@ -1654,16 +980,18 @@ export default function CommonGround() {
                 All robots must be home to finish.
               </li>
               <li>
-                Conversations earn 1–3 energy. A pass earns 1. Each move costs
-                1; store up to 6.
+                Start with 3 energy and gain 3 each new round. Each move costs
+                1; store up to 6. Scenarios are optional Practice only.
               </li>
               <li>
                 You can give one energy to one teammate each round before
                 planning.
               </li>
               <li>
-                A key opens the gate for everyone from the next round. Each
-                battery gives each robot +1 once, after movement.
+                The relay has two charges. A robot already on it can spend 1
+                energy and stay still to power the gate for that round. A
+                different robot must collect the pump while it is powered.
+                Batteries give +1 once per robot, after movement.
               </li>
               <li>
                 A blocked move costs 1, rolls you back one step and cancels the
@@ -1723,6 +1051,7 @@ function Practice({ onError }: { onError: (s: string) => void }) {
       a.robots = a.robots.slice(0, 1);
       a.robots[0].energy = 6;
       a.keys = ["green"];
+      a.phase = "round-end";
       return a;
     }),
     [moves, setMoves] = useState<Direction[]>([]);
@@ -1919,8 +1248,9 @@ function Practice({ onError }: { onError: (s: string) => void }) {
                 const { execute } = await import("../shared/game");
                 const next = structuredClone(sandbox);
                 next.robots[0].queue = moves;
-                execute(next);
+                execute(next, true);
                 next.robots[0].energy = 6;
+                next.keys = ["green"];
                 setSandbox(next);
                 setMoves([]);
               }}

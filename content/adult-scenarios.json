@@ -19,13 +19,11 @@
     }
   ],
   "scoring": {
-    "completionEnergy": 1,
+    "mode": "optional-practice-only",
     "creditPerDecision": 1,
     "scoredDecisions": 2,
     "repairCredit": 0,
-    "passEnergy": 1,
-    "passDiscardsPartialBonuses": true,
-    "maxRoundEnergy": 3
+    "missionEnergy": false
   },
   "playlists": {
     "AE": [
@@ -1299,5 +1297,6 @@
       }
     }
   ],
-  "audience": "Autistic adults and invited adult friends"
+  "audience": "Autistic adults and invited adult friends",
+  "usage": "Optional individual Practice only. No mission rewards or communication rating."
 }

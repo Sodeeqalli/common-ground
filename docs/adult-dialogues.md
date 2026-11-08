@@ -1,6 +1,6 @@
 # Common Ground — Eight Adult Conversations
 
-Original fictional practice, not a validated assessment. See team-spec.md for scoring and research rationale.
+Optional individual Practice only. These original fictional conversations do not award mission energy, affect team progress or rate a player’s communication. Internal criterion credits below are authoring metadata, not player scores. See [team-spec.md](team-spec.md) for the current mission design and research boundaries.
 
 <a id="ae-01"></a>
 
@@ -23,21 +23,21 @@ You are working on a group presentation. Your slides can be finished by 6 p.m., 
 
 ### Decision 1
 
-**AE-01-D1-C3 — +0 energy**
+**AE-01-D1-C3 — 0 criterion credit**
 
 - **You say:** Sure, I will have everything ready whenever you need it.
 - **Reply:** Maya: “Okay, I will expect the slides at four.”
 - **Why:** That promises unspecified availability despite your known time constraint.
 - **Next:** AE-01-R1
 
-**AE-01-D1-C1 — +1 energy**
+**AE-01-D1-C1 — 1 criterion credit**
 
 - **You say:** What time do you need them? I can finish by six.
 - **Reply:** Maya: “There are two stages to what I need.”
 - **Why:** You ask for a deadline and state a feasible completion time.
 - **Next:** AE-01-REVEAL
 
-**AE-01-D1-C2 — +1 energy**
+**AE-01-D1-C2 — 1 criterion credit**
 
 - **You say:** I can finish by six. Does that work for combining the presentation?
 - **Reply:** Maya: “I need something earlier for the layout.”
@@ -58,21 +58,21 @@ Maya explains: “I need a rough version by four to combine everyone’s work. F
 
 ### Decision 2
 
-**AE-01-D2-C1 — +1 energy**
+**AE-01-D2-C1 — 1 criterion credit**
 
 - **You say:** I can send an outline by four and finished slides by six. Would that work?
 - **Reply:** Maya: “Yes, the outline is enough to start the layout.”
 - **Why:** You propose a feasible alternative and check whether it meets the need.
 - **Next:** AE-01-END
 
-**AE-01-D2-C2 — +1 energy**
+**AE-01-D2-C2 — 1 criterion credit**
 
 - **You say:** I cannot provide a full draft by four. Could you start the layout from my outline?
 - **Reply:** Maya: “Yes, send the outline and I will start.”
 - **Why:** You state the limit and negotiate how to divide the work.
 - **Next:** AE-01-END
 
-**AE-01-D2-C3 — +0 energy**
+**AE-01-D2-C3 — 0 criterion credit**
 
 - **You say:** I will send the full draft by four.
 - **Reply:** Maya: “Great, I will plan around that.”
@@ -118,21 +118,21 @@ Your housemate asks for help getting the shared room ready. You are available fr
 
 ### Decision 1
 
-**AE-02-D1-C1 — +1 energy**
+**AE-02-D1-C1 — 1 criterion credit**
 
 - **You say:** What needs doing, and when are the guests arriving? I am free from 5:30.
 - **Reply:** Nadia: “I will explain the tasks and the arrival time.”
 - **Why:** You ask about scope and deadline while stating availability.
 - **Next:** AE-02-REVEAL
 
-**AE-02-D1-C2 — +1 energy**
+**AE-02-D1-C2 — 1 criterion credit**
 
 - **You say:** I can help after 5:30. Which part should I take, and will that be in time?
 - **Reply:** Nadia: “There are two things to finish before six.”
 - **Why:** You check whether a bounded offer meets the request.
 - **Next:** AE-02-REVEAL
 
-**AE-02-D1-C3 — +0 energy**
+**AE-02-D1-C3 — 0 criterion credit**
 
 - **You say:** I will have the whole room ready by five.
 - **Reply:** Nadia: “Okay, I will leave it to you.”
@@ -153,21 +153,21 @@ Nadia explains: “Guests arrive at six. We need the table cleared and chairs ar
 
 ### Decision 2
 
-**AE-02-D2-C2 — +1 energy**
+**AE-02-D2-C2 — 1 criterion credit**
 
 - **You say:** I will arrange the chairs first. Could you show me which papers to keep before we tackle the table?
 - **Reply:** Nadia: “Yes, I can sort the papers while you do the chairs.”
 - **Why:** You sequence a feasible task and request the information needed for the other.
 - **Next:** AE-02-END
 
-**AE-02-D2-C3 — +0 energy**
+**AE-02-D2-C3 — 0 criterion credit**
 
 - **You say:** I will put all the papers in the recycling to clear the table.
 - **Reply:** Nadia: “Some of those papers need to be kept.”
 - **Why:** That bypasses an explicit uncertainty about shared belongings.
 - **Next:** AE-02-R2
 
-**AE-02-D2-C1 — +1 energy**
+**AE-02-D2-C1 — 1 criterion credit**
 
 - **You say:** I can arrange the chairs. Can you handle the papers and clear the table?
 - **Reply:** Nadia: “Yes, I will do the table.”
@@ -213,21 +213,21 @@ You would like to meet a friend. The proposed café is usually crowded, and toda
 
 ### Decision 1
 
-**AE-03-D1-C2 — +1 energy**
+**AE-03-D1-C2 — 1 criterion credit**
 
 - **You say:** A quiet conversation would work better for me. Is there a quieter time or place?
 - **Reply:** Sam: “I checked the café’s options.”
 - **Why:** You state the relevant preference and invite a workable alternative.
 - **Next:** AE-03-REVEAL
 
-**AE-03-D1-C3 — +0 energy**
+**AE-03-D1-C3 — 0 criterion credit**
 
 - **You say:** The crowded café is exactly the quiet setting I need.
 - **Reply:** Sam: “Okay, I will plan for that café.”
 - **Why:** That gives information inconsistent with the stated setting and preference.
 - **Next:** AE-03-R1
 
-**AE-03-D1-C1 — +1 energy**
+**AE-03-D1-C1 — 1 criterion credit**
 
 - **You say:** I would like to meet. Could we choose somewhere quieter than that café?
 - **Reply:** Sam: “Let me suggest an alternative.”
@@ -248,21 +248,21 @@ Sam says: “That café does not take quiet-table requests. I could meet in the 
 
 ### Decision 2
 
-**AE-03-D2-C3 — +0 energy**
+**AE-03-D2-C3 — 0 criterion credit**
 
 - **You say:** The weather is definitely dry, so no check or backup is needed.
 - **Reply:** Sam: “I have not seen a definite forecast.”
 - **Why:** That turns an unknown condition into a certainty.
 - **Next:** AE-03-R2
 
-**AE-03-D2-C1 — +1 energy**
+**AE-03-D2-C1 — 1 criterion credit**
 
 - **You say:** The park sounds good if it is dry. Shall we check the weather that morning and confirm?
 - **Reply:** Sam: “Yes, we can confirm Saturday morning.”
 - **Why:** You make the condition and confirmation step explicit.
 - **Next:** AE-03-END
 
-**AE-03-D2-C2 — +1 energy**
+**AE-03-D2-C2 — 1 criterion credit**
 
 - **You say:** Could we plan for the park in dry weather and reschedule if it rains?
 - **Reply:** Sam: “Yes, that backup plan works for me.”
@@ -308,21 +308,21 @@ You are in a project meeting. Several people are speaking quickly, and you canno
 
 ### Decision 1
 
-**AE-04-D1-C3 — +0 energy**
+**AE-04-D1-C3 — 0 criterion credit**
 
 - **You say:** Yes, my task is completely clear.
 - **Reply:** Jordan: “Great, we can move on.”
 - **Why:** That confirms understanding when the task is still unclear to you.
 - **Next:** AE-04-R1
 
-**AE-04-D1-C1 — +1 energy**
+**AE-04-D1-C1 — 1 criterion credit**
 
 - **You say:** I do not have my action clear yet. Could we write down the task and owner?
 - **Reply:** Jordan: “Yes, I will add an action point.”
 - **Why:** You correct the assumption of shared understanding and request a useful format.
 - **Next:** AE-04-REVEAL
 
-**AE-04-D1-C2 — +1 energy**
+**AE-04-D1-C2 — 1 criterion credit**
 
 - **You say:** Before we move on, could you recap my action in the notes?
 - **Reply:** Jordan: “I will write it in the shared notes.”
@@ -343,21 +343,21 @@ Jordan writes: “Your action is to review the draft and flag factual errors.”
 
 ### Decision 2
 
-**AE-04-D2-C1 — +1 energy**
+**AE-04-D2-C1 — 1 criterion credit**
 
 - **You say:** Should I review the Monday draft or the Wednesday draft?
 - **Reply:** Jordan: “The Wednesday draft.”
 - **Why:** You resolve the remaining version ambiguity.
 - **Next:** AE-04-END
 
-**AE-04-D2-C2 — +1 energy**
+**AE-04-D2-C2 — 1 criterion credit**
 
 - **You say:** Please link the exact draft you want reviewed in the action point.
 - **Reply:** Jordan: “I have linked the Wednesday version.”
 - **Why:** You ask for a concrete reference that prevents a version mix-up.
 - **Next:** AE-04-END
 
-**AE-04-D2-C3 — +0 energy**
+**AE-04-D2-C3 — 0 criterion credit**
 
 - **You say:** I will review the Monday draft; there is no need to check the version.
 - **Reply:** Jordan: “We need the review on the current version.”
@@ -403,21 +403,21 @@ A colleague asks for an extra report today. Your scheduled work fills the day. Y
 
 ### Decision 1
 
-**AE-05-D1-C1 — +1 energy**
+**AE-05-D1-C1 — 1 criterion credit**
 
 - **You say:** I cannot add it today without moving another task. Is tomorrow acceptable?
 - **Reply:** Casey: “Tomorrow may be fine; let me confirm.”
 - **Why:** You state the trade-off and offer a feasible alternative.
 - **Next:** AE-05-REVEAL
 
-**AE-05-D1-C2 — +1 energy**
+**AE-05-D1-C2 — 1 criterion credit**
 
 - **You say:** Which task should move if this report is the priority? My day is already allocated.
 - **Reply:** Casey: “We may not need to change today’s priorities.”
 - **Why:** You ask for an explicit priority choice instead of silently overcommitting.
 - **Next:** AE-05-REVEAL
 
-**AE-05-D1-C3 — +0 energy**
+**AE-05-D1-C3 — 0 criterion credit**
 
 - **You say:** I will finish everything today with no changes.
 - **Reply:** Casey: “Okay, I will expect both.”
@@ -438,21 +438,21 @@ Casey says: “The report can wait until tomorrow. Please keep today’s work as
 
 ### Decision 2
 
-**AE-05-D2-C2 — +1 energy**
+**AE-05-D2-C2 — 1 criterion credit**
 
 - **You say:** Tomorrow by noon is feasible for the report. Can we record that as the deadline?
 - **Reply:** Casey: “Yes, I have updated it.”
 - **Why:** You make the new commitment explicit and shared.
 - **Next:** AE-05-END
 
-**AE-05-D2-C3 — +0 energy**
+**AE-05-D2-C3 — 0 criterion credit**
 
 - **You say:** I will drop today’s work and do the report immediately.
 - **Reply:** Casey: “We agreed to keep today’s work as planned.”
 - **Why:** That ignores the clarified priority decision.
 - **Next:** AE-05-R2
 
-**AE-05-D2-C1 — +1 energy**
+**AE-05-D2-C1 — 1 criterion credit**
 
 - **You say:** I will keep today’s tasks and send the report tomorrow by noon.
 - **Reply:** Casey: “That works.”
@@ -498,21 +498,21 @@ A friend is visiting. You have enjoyed seeing them, but now want the visit to en
 
 ### Decision 1
 
-**AE-06-D1-C2 — +1 energy**
+**AE-06-D1-C2 — 1 criterion credit**
 
 - **You say:** Not another film tonight. Thanks for coming over; I am going to have a quiet evening now.
 - **Reply:** Ellis: “All right, I will head out.”
 - **Why:** You decline the extension and communicate the next plan.
 - **Next:** AE-06-REVEAL
 
-**AE-06-D1-C3 — +0 energy**
+**AE-06-D1-C3 — 0 criterion credit**
 
 - **You say:** Yes, stay for another film.
 - **Reply:** Ellis: “Great, let us choose one.”
 - **Why:** That invites the continuation you have decided you do not want.
 - **Next:** AE-06-R1
 
-**AE-06-D1-C1 — +1 energy**
+**AE-06-D1-C1 — 1 criterion credit**
 
 - **You say:** I am ready to end the visit now. I need some time to myself.
 - **Reply:** Ellis: “Okay, I will get my things.”
@@ -533,21 +533,21 @@ Ellis says: “Okay, I will go. Should I come back at the same time tomorrow?”
 
 ### Decision 2
 
-**AE-06-D2-C3 — +0 energy**
+**AE-06-D2-C3 — 0 criterion credit**
 
 - **You say:** Yes, tomorrow at the same time is confirmed.
 - **Reply:** Ellis: “I will come at the same time.”
 - **Why:** That creates a definite commitment where your preference is still undecided.
 - **Next:** AE-06-R2
 
-**AE-06-D2-C1 — +1 energy**
+**AE-06-D2-C1 — 1 criterion credit**
 
 - **You say:** I do not want to set another time yet. I will let you know when I am ready to plan.
 - **Reply:** Ellis: “Okay, I will wait to hear from you.”
 - **Why:** You can end one visit without scheduling another.
 - **Next:** AE-06-END
 
-**AE-06-D2-C2 — +1 energy**
+**AE-06-D2-C2 — 1 criterion credit**
 
 - **You say:** Please do not assume tomorrow. Could we check another day before arranging anything?
 - **Reply:** Ellis: “Yes, we can check later.”
@@ -593,21 +593,21 @@ You agreed to draft an announcement for a volunteer group. You did not agree to 
 
 ### Decision 1
 
-**AE-07-D1-C3 — +0 energy**
+**AE-07-D1-C3 — 0 criterion credit**
 
 - **You say:** Yes, I have sent it to every member already.
 - **Reply:** Riley: “Okay, then I will not send anything.”
 - **Why:** That claims an action you have neither completed nor had access to perform.
 - **Next:** AE-07-R1
 
-**AE-07-D1-C1 — +1 energy**
+**AE-07-D1-C1 — 1 criterion credit**
 
 - **You say:** I agreed to draft it. I cannot send it because I do not have the mailing list.
 - **Reply:** Riley: “I understood the task differently. I can handle sending.”
 - **Why:** You clarify the original scope and a practical access constraint.
 - **Next:** AE-07-REVEAL
 
-**AE-07-D1-C2 — +1 energy**
+**AE-07-D1-C2 — 1 criterion credit**
 
 - **You say:** Let us check the handoff: I have the draft, but who is responsible for sending it?
 - **Reply:** Riley: “I can take the sending step.”
@@ -628,21 +628,21 @@ Riley says: “I can send it, but I need the final approved text.” Your draft 
 
 ### Decision 2
 
-**AE-07-D2-C1 — +1 energy**
+**AE-07-D2-C1 — 1 criterion credit**
 
 - **You say:** I can send you the draft now, but the date needs approval before distribution.
 - **Reply:** Riley: “I will wait for confirmation before sending.”
 - **Why:** You distinguish a ready draft from approved content.
 - **Next:** AE-07-END
 
-**AE-07-D2-C2 — +1 energy**
+**AE-07-D2-C2 — 1 criterion credit**
 
 - **You say:** Who should confirm the date? I can ask the organiser before marking the text final.
 - **Reply:** Riley: “Yes, the organiser should confirm it.”
 - **Why:** You identify the unresolved decision and the person able to resolve it.
 - **Next:** AE-07-END
 
-**AE-07-D2-C3 — +0 energy**
+**AE-07-D2-C3 — 0 criterion credit**
 
 - **You say:** Mark it approved and send it now; we can assume the date is correct.
 - **Reply:** Riley: “I thought the date still needed confirmation.”
@@ -688,21 +688,21 @@ Last week you offered to water a housemate’s plants during one trip. They now 
 
 ### Decision 1
 
-**AE-08-D1-C1 — +1 energy**
+**AE-08-D1-C1 — 1 criterion credit**
 
 - **You say:** My offer was for last week’s trip, not every weekend.
 - **Reply:** Quinn: “I misunderstood how long the offer lasted.”
 - **Why:** You clarify the scope without needing to justify the boundary.
 - **Next:** AE-08-REVEAL
 
-**AE-08-D1-C2 — +1 energy**
+**AE-08-D1-C2 — 1 criterion credit**
 
 - **You say:** Please remove the recurring plan. I cannot commit to watering every weekend.
 - **Reply:** Quinn: “Okay, I will need another arrangement.”
 - **Why:** You state what needs to change and what you cannot promise.
 - **Next:** AE-08-REVEAL
 
-**AE-08-D1-C3 — +0 energy**
+**AE-08-D1-C3 — 0 criterion credit**
 
 - **You say:** Yes, I will take every weekend from now on.
 - **Reply:** Quinn: “Great, I will keep the schedule.”
@@ -723,21 +723,21 @@ Quinn says: “I misunderstood. Could you at least cover this Saturday?” You c
 
 ### Decision 2
 
-**AE-08-D2-C2 — +1 energy**
+**AE-08-D2-C2 — 1 criterion credit**
 
 - **You say:** I cannot cover the evening watering, so you will need someone else for Saturday’s usual task.
 - **Reply:** Quinn: “Okay, I will ask someone else.”
 - **Why:** You can decline when your availability does not cover the actual need.
 - **Next:** AE-08-END
 
-**AE-08-D2-C3 — +0 energy**
+**AE-08-D2-C3 — 0 criterion credit**
 
 - **You say:** Saturday evening is definitely covered by me.
 - **Reply:** Quinn: “I will count on you for the evening.”
 - **Why:** That promises the specific time when you are unavailable.
 - **Next:** AE-08-R2
 
-**AE-08-D2-C1 — +1 energy**
+**AE-08-D2-C1 — 1 criterion credit**
 
 - **You say:** I can check them Saturday morning, but someone else would need to water them in the evening.
 - **Reply:** Quinn: “I will arrange the evening watering separately.”

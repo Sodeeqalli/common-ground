@@ -1,5 +1,10 @@
 import { env } from "cloudflare:workers";
-import { newTeam, applyAction, publicView } from "../../../lib/game-server";
+import {
+  newTeam,
+  applyAction,
+  publicView,
+  normalizeTeam,
+} from "../../../lib/game-server";
 import { COLORS, readinessContext, type Team } from "../../../shared/game";
 export const dynamic = "force-dynamic";
 const reply = (data: unknown, status = 200) =>
@@ -27,7 +32,7 @@ async function getTeam(id: string) {
     .DB!.prepare("SELECT state FROM teams WHERE id = ?")
     .bind(id)
     .first<{ state: string }>();
-  return row ? (JSON.parse(row.state) as Team) : null;
+  return row ? normalizeTeam(JSON.parse(row.state) as Team) : null;
 }
 export async function GET(req: Request) {
   try {
@@ -135,19 +140,21 @@ export async function POST(req: Request) {
       body.requestId.length > 80
     )
       return reply({ error: "Missing request identifier." }, 400);
-    // Answers target an immutable choice ID in this player's current node. Revalidate
-    // against fresh state after a competing write; never replay a shared decision.
+    // Revalidate independent messages and phase-local actions after competing writes.
+    // Readiness still requires the same assignments, energy and relay commitment.
     const phaseLocal = [
       "brief-ready",
       "coord-ready",
       "moves",
       "next",
-      "pass",
       "resume",
       "pause",
       "message",
+      "ping",
+      "energy-request",
+      "request-response",
     ].includes(body.type);
-    const attempts = body.type === "answer" || phaseLocal ? 5 : 1;
+    const attempts = phaseLocal ? 5 : 1;
     for (let retry = 0; retry < attempts; retry++) {
       const team = await getTeam(member.team_id);
       if (!team) return reply({ error: "Team not found." }, 404);
@@ -159,7 +166,7 @@ export async function POST(req: Request) {
         !["brief-ready", "coord-ready"].includes(body.type) ||
         (a && body.readyContext === readinessContext(a));
       const mayRebase =
-        body.type === "answer" || (phaseLocal && samePhase && readyIsCurrent);
+        body.type === "message" || (phaseLocal && samePhase && readyIsCurrent);
       if (body.version !== team.version && !mayRebase)
         return reply(
           {

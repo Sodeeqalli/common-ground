@@ -2,9 +2,11 @@ import bank from "../content/adult-scenarios.json";
 import {
   makeAttempt,
   execute,
-  initialDialogue,
-  PLAYLIST,
   COLORS,
+  FLOOR,
+  GENERATOR,
+  same,
+  position,
   type Team,
   type Direction,
 } from "../shared/game";
@@ -59,37 +61,27 @@ export function newTeam(
     messages: [],
   };
 }
-function settleDialogue(team: Team, member: string) {
-  const a = team.attempt!,
-    r = a.robots.find((r) => r.id === member)!;
-  const scenario = scenarios.find((s) => s.id === PLAYLIST[a.round - 1])!;
-  let node = scenario.nodes[r.dialogue.node];
-  // Traverse authored reply/context nodes until the next decision or terminal.
-  while (node && !["decision", "repair", "terminal"].includes(node.type)) {
-    if (node.text)
-      r.dialogue.transcript.push({
-        who:
-          node.type === "reply" ? node.speaker || "Reply" : "New information",
-        text: node.text,
-      });
-    r.dialogue.node = node.next!;
-    node = scenario.nodes[r.dialogue.node];
+// Older active attempts cannot safely resume under the new resource/gate rules.
+// Normalize on read and next write, preserving team identity and restored regions.
+export function normalizeTeam(team: Team): Team {
+  team.energyRequests ??= [];
+  team.pings ??= [];
+  const a = team.attempt;
+  if (a && a.rulesVersion !== 2) {
+    team.upgradeNotice =
+      "Team missions now use shared planning instead of quizzes. Start a fresh expedition; your restored world is safe.";
+    if (!["success", "ended"].includes(a.phase)) a.phase = "ended";
+    a.powerCharges ??= 0;
+    a.powerBy ??= null;
   }
-  demand(node, "This conversation could not continue.");
-  if (node.type === "terminal" && !r.dialogue.done) {
-    r.dialogue.done = true;
-    r.energy = Math.min(6, r.energy + 1 + r.dialogue.credits);
-  }
-  if (a.robots.every((r) => r.dialogue.done)) {
-    a.phase = "coordination";
-    a.rosterReady = [];
-  }
+  return team;
 }
 export function applyAction(
   team: Team,
   member: string,
   action: Record<string, unknown>,
 ) {
+  normalizeTeam(team);
   const type = action.type as string;
   const a = team.attempt;
   const actor = team.members.find((m) => m.id === member);
@@ -111,6 +103,27 @@ export function applyAction(
       "Choose two to four team members, including the host.",
     );
     team.attempt = makeAttempt(crypto.randomUUID(), roster);
+    team.energyRequests = [];
+    team.pings = [];
+    delete team.upgradeNotice;
+    return;
+  }
+  if (type === "message") {
+    const text = typeof action.text === "string" ? action.text.trim() : "";
+    demand(
+      text.length > 0 && text.length <= 280,
+      "Write a message of 1–280 characters.",
+    );
+    team.messages = [
+      ...team.messages.slice(-59),
+      {
+        id: crypto.randomUUID(),
+        member,
+        text,
+        at: new Date().toISOString(),
+        round: a?.round,
+      },
+    ];
     return;
   }
   demand(a, "There is no active mission.");
@@ -130,18 +143,109 @@ export function applyAction(
     a.log = ["The team returned to the world. Earlier world progress is safe."];
     return;
   }
-  if (type === "message") {
-    const allowed = [
-      "I need a moment.",
-      "Could I have one energy?",
-      "I can share one.",
-      "Nice teamwork!",
+  if (type === "ping") {
+    demand(
+      !["success", "ended"].includes(a.phase),
+      "This expedition has ended.",
+    );
+    const at = action.at as { x: number; y: number };
+    demand(
+      at &&
+        Number.isInteger(at.x) &&
+        Number.isInteger(at.y) &&
+        FLOOR.some((p) => same(p, at)),
+      "Choose a walkable map tile.",
+    );
+    demand(
+      ["meet", "help", "route"].includes(action.kind as string),
+      "Choose a ping type.",
+    );
+    team.pings = [
+      ...(team.pings || [])
+        .filter((p) => p.attemptId === a.id && p.round >= a.round - 1)
+        .slice(-11),
+      {
+        id: crypto.randomUUID(),
+        attemptId: a.id,
+        member,
+        at: { x: at.x, y: at.y },
+        kind: action.kind as "meet" | "help" | "route",
+        round: a.round,
+      },
     ];
-    demand(allowed.includes(action.text as string), "Choose a preset message.");
-    team.messages = [
-      ...team.messages.slice(-5),
-      { member, text: action.text as string },
+    return;
+  }
+  if (type === "energy-request") {
+    demand(
+      !["success", "ended"].includes(a.phase),
+      "This expedition has ended.",
+    );
+    demand(r.energy < 6, "Your energy is already full.");
+    const requests = team.energyRequests!;
+    if (
+      requests.some(
+        (q) =>
+          q.from === member && q.attemptId === a.id && q.status === "pending",
+      )
+    )
+      return;
+    team.energyRequests = [
+      ...requests.slice(-19),
+      {
+        id: crypto.randomUUID(),
+        attemptId: a.id,
+        from: member,
+        status: "pending",
+        passedBy: [],
+      },
     ];
+    return;
+  }
+  if (type === "request-response") {
+    const q = team.energyRequests?.find(
+      (q) => q.id === action.request && q.attemptId === a.id,
+    );
+    demand(
+      q && q.status === "pending",
+      "That request has already been resolved.",
+    );
+    if (action.response === "cancel") {
+      demand(q.from === member, "Only the sender can cancel.");
+      q.status = "cancelled";
+    } else {
+      demand(
+        action.response === "not-now" && q.from !== member,
+        "Choose a response to your teammate.",
+      );
+      q.passedBy = [...new Set([...q.passedBy, member])];
+      if (
+        a.roster
+          .filter((id) => id !== q.from)
+          .every((id) => q.passedBy.includes(id))
+      )
+        q.status = "unavailable";
+    }
+    return;
+  }
+  if (type === "power") {
+    demand(a.phase === "coordination", "Agree on power before locking routes.");
+    if (action.on === false) {
+      demand(
+        a.powerBy === member,
+        "Only the operator can cancel their commitment.",
+      );
+      a.powerBy = null;
+    } else {
+      demand(
+        !a.powerBy &&
+          a.powerCharges > 0 &&
+          same(position(r), GENERATOR) &&
+          r.energy >= 1,
+        "Stand on the relay with at least one energy and a charge remaining.",
+      );
+      a.powerBy = member;
+    }
+    a.rosterReady = [];
     return;
   }
   if (type === "pause") {
@@ -192,43 +296,6 @@ export function applyAction(
     );
     a.rosterReady = [...new Set([...a.rosterReady, member])];
     if (a.rosterReady.length === a.roster.length) {
-      a.phase = "conversation";
-      a.rosterReady = [];
-    }
-    return;
-  }
-  if (type === "answer") {
-    demand(
-      a.phase === "conversation" && !r.dialogue.done,
-      "Your conversation is already complete.",
-    );
-    const scenario = scenarios.find((s) => s.id === PLAYLIST[a.round - 1])!;
-    const node = scenario.nodes[r.dialogue.node];
-    const choice = node.choices?.find((c) => c.id === action.choice);
-    demand(
-      choice,
-      "That choice is not available at this point in the conversation.",
-    );
-    r.dialogue.transcript.push({ who: "You", text: choice.text });
-    r.dialogue.credits += choice.credit;
-    r.dialogue.feedback =
-      choice.explanation ||
-      "You clarified your message. Repairs do not add energy.";
-    r.dialogue.node = choice.next;
-    settleDialogue(team, member);
-    return;
-  }
-  if (type === "pass") {
-    demand(
-      a.phase === "conversation" && !r.dialogue.done,
-      "Your round reward has already been issued.",
-    );
-    r.dialogue.credits = 0;
-    r.dialogue.done = true;
-    r.dialogue.feedback =
-      "You passed this conversation. One energy is available for your route.";
-    r.energy = Math.min(6, r.energy + 1);
-    if (a.robots.every((r) => r.dialogue.done)) {
       a.phase = "coordination";
       a.rosterReady = [];
     }
@@ -240,6 +307,16 @@ export function applyAction(
       "Energy is shared before route planning.",
     );
     const to = a.robots.find((r) => r.id === action.to);
+    if (action.request) {
+      const q = team.energyRequests?.find(
+        (q) => q.id === action.request && q.attemptId === a.id,
+      );
+      demand(
+        q && q.status === "pending" && q.from === action.to,
+        "That request has already been resolved.",
+      );
+    }
+
     demand(
       to && to.id !== member && !r.donated && r.energy >= 1 && to.energy < 6,
       "You can give one energy per round to a teammate with space.",
@@ -247,6 +324,12 @@ export function applyAction(
     r.energy--;
     to.energy++;
     r.donated = true;
+    for (const q of team.energyRequests || [])
+      if (q.attemptId === a.id && q.from === to.id && q.status === "pending") {
+        q.status = "fulfilled";
+        q.fulfilledBy = member;
+      }
+    if (a.powerBy === member && r.energy < 1) a.powerBy = null;
     a.rosterReady = [];
     return;
   }
@@ -305,6 +388,10 @@ export function applyAction(
         moves.every((d) => ["up", "down", "left", "right"].includes(d)),
       "Your route must fit your available energy.",
     );
+    demand(
+      a.powerBy !== member || moves.length === 0,
+      "The relay operator must stay for this round. Cancel during coordination to move instead.",
+    );
     r.queue = moves;
     r.ready = true;
     if (a.robots.every((r) => r.ready)) {
@@ -327,10 +414,12 @@ export function applyAction(
     a.rosterReady = [...new Set([...a.rosterReady, member])];
     if (a.rosterReady.length === a.roster.length) {
       a.round++;
-      a.phase = "conversation";
+      a.powerBy = null;
+      a.keys = [];
+      a.phase = "coordination";
       a.rosterReady = [];
       a.robots.forEach((r) => {
-        r.dialogue = initialDialogue(a.round);
+        r.energy = Math.min(6, r.energy + 3);
         r.donated = false;
       });
     }
@@ -339,45 +428,12 @@ export function applyAction(
   throw new Error("Unknown action.");
 }
 export function publicView(team: Team, member: string) {
-  const copy = structuredClone(team) as Team & {
-    me?: string;
-    scenario?: unknown;
-    node?: unknown;
-    progress?: unknown;
-  };
+  const copy = normalizeTeam(structuredClone(team)) as Team & { me: string };
   copy.processed = [];
   copy.me = member;
-  const a = copy.attempt;
-  if (a) {
-    const s = scenarios.find((s) => s.id === PLAYLIST[a.round - 1])!;
-    const me = a.robots.find((r) => r.id === member);
-    copy.scenario = {
-      id: s.id,
-      title: s.title,
-      context: s.context,
-      goal: s.goal,
-      openingLine: s.openingLine,
-      skill: s.skill,
-    };
-    if (me) {
-      const n = s.nodes[me.dialogue.node];
-      copy.node = {
-        ...n,
-        choices: n?.choices?.map((c) => ({ id: c.id, text: c.text })),
-      };
-    }
-    a.robots.forEach((r) => {
-      if (r.id !== member) {
-        r.dialogue = {
-          node: "",
-          credits: 0,
-          done: r.dialogue.done,
-          transcript: [],
-          feedback: "",
-        };
-        r.queue = [];
-      }
-    });
-  }
+  copy.attempt?.robots.forEach((r) => {
+    if (r.id !== member) r.queue = [];
+    delete (r as unknown as Record<string, unknown>).dialogue;
+  });
   return copy;
 }
